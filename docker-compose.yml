@@ -1,0 +1,237 @@
+# 5G SA lab: Open5GS 5GC (one NF per container) + srsRAN Project gNB + srsUE over ZeroMQ.
+# One Docker network per 3GPP interface group:
+#   cn  10.88.1.0/24  SBI (HTTP/2) + N4 (PFCP)
+#   ran 10.88.2.0/24  N2 (NGAP/SCTP) + N3 (GTP-U)
+#   air 10.88.3.0/24  simulated Uu (ZMQ IQ samples)
+#   dn  10.88.4.0/24  N6 (data network)
+# Core starts with `docker compose up -d`; gnb/ue (profile "ran") are started in order by scripts/up.sh.
+
+x-open5gs: &open5gs
+  image: gradiant/open5gs:${OPEN5GS_VERSION}
+  restart: unless-stopped
+  cpuset: ${CORE_CPUS}
+
+x-nrf-dep: &nrf-dep
+  nrf:
+    condition: service_healthy
+
+services:
+  mongo:
+    image: mongo:${MONGO_VERSION}
+    container_name: mongo
+    restart: unless-stopped
+    cpuset: ${CORE_CPUS}
+    volumes:
+      - mongo_data:/data/db
+      - ./configs/open5gs/mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping').ok"]
+      interval: 3s
+      timeout: 3s
+      retries: 40
+    networks:
+      cn: { ipv4_address: 10.88.1.5 }
+
+  webui:
+    image: gradiant/open5gs-webui:${OPEN5GS_VERSION}
+    container_name: webui
+    restart: unless-stopped
+    cpuset: ${CORE_CPUS}
+    environment:
+      DB_URI: mongodb://10.88.1.5/open5gs
+    ports:
+      - "127.0.0.1:3000:9999"
+    depends_on:
+      mongo: { condition: service_healthy }
+    networks:
+      cn: { ipv4_address: 10.88.1.6 }
+
+  nrf:
+    <<: *open5gs
+    container_name: nrf
+    command: open5gs-nrfd -c /config/nrf.yaml
+    volumes: [ "./configs/open5gs/nrf.yaml:/config/nrf.yaml:ro" ]
+    healthcheck:
+      test: ["CMD", "bash", "-c", "</dev/tcp/10.88.1.10/7777"]
+      interval: 2s
+      timeout: 2s
+      retries: 30
+    networks:
+      cn: { ipv4_address: 10.88.1.10 }
+
+  amf:
+    <<: *open5gs
+    container_name: amf
+    command: open5gs-amfd -c /config/amf.yaml
+    volumes: [ "./configs/open5gs/amf.yaml:/config/amf.yaml:ro" ]
+    depends_on: *nrf-dep
+    networks:
+      cn: { ipv4_address: 10.88.1.2 }
+      ran: { ipv4_address: 10.88.2.2 }
+
+  smf:
+    <<: *open5gs
+    container_name: smf
+    command: open5gs-smfd -c /config/smf.yaml
+    volumes: [ "./configs/open5gs/smf.yaml:/config/smf.yaml:ro" ]
+    depends_on: *nrf-dep
+    networks:
+      cn: { ipv4_address: 10.88.1.11 }
+
+  upf:
+    <<: *open5gs
+    container_name: upf
+    user: root
+    entrypoint: ["/bin/bash", "/scripts/upf-entrypoint.sh"]
+    command: []
+    volumes:
+      - ./configs/open5gs/upf.yaml:/config/upf.yaml:ro
+      - ./scripts/upf-entrypoint.sh:/scripts/upf-entrypoint.sh:ro
+    cap_add: [NET_ADMIN]
+    devices: ["/dev/net/tun:/dev/net/tun"]
+    sysctls:
+      net.ipv4.ip_forward: 1
+    depends_on: *nrf-dep
+    networks:
+      cn: { ipv4_address: 10.88.1.3 }
+      ran: { ipv4_address: 10.88.2.3 }
+      dn: { ipv4_address: 10.88.4.3 }
+
+  ausf:
+    <<: *open5gs
+    container_name: ausf
+    command: open5gs-ausfd -c /config/ausf.yaml
+    volumes: [ "./configs/open5gs/ausf.yaml:/config/ausf.yaml:ro" ]
+    depends_on: *nrf-dep
+    networks:
+      cn: { ipv4_address: 10.88.1.12 }
+
+  udm:
+    <<: *open5gs
+    container_name: udm
+    command: open5gs-udmd -c /config/udm.yaml
+    volumes: [ "./configs/open5gs/udm.yaml:/config/udm.yaml:ro" ]
+    depends_on: *nrf-dep
+    networks:
+      cn: { ipv4_address: 10.88.1.13 }
+
+  udr:
+    <<: *open5gs
+    container_name: udr
+    command: open5gs-udrd -c /config/udr.yaml
+    volumes: [ "./configs/open5gs/udr.yaml:/config/udr.yaml:ro" ]
+    depends_on:
+      nrf: { condition: service_healthy }
+      mongo: { condition: service_healthy }
+    networks:
+      cn: { ipv4_address: 10.88.1.14 }
+
+  pcf:
+    <<: *open5gs
+    container_name: pcf
+    command: open5gs-pcfd -c /config/pcf.yaml
+    volumes: [ "./configs/open5gs/pcf.yaml:/config/pcf.yaml:ro" ]
+    depends_on:
+      nrf: { condition: service_healthy }
+      mongo: { condition: service_healthy }
+    networks:
+      cn: { ipv4_address: 10.88.1.15 }
+
+  bsf:
+    <<: *open5gs
+    container_name: bsf
+    command: open5gs-bsfd -c /config/bsf.yaml
+    volumes: [ "./configs/open5gs/bsf.yaml:/config/bsf.yaml:ro" ]
+    depends_on: *nrf-dep
+    networks:
+      cn: { ipv4_address: 10.88.1.16 }
+
+  nssf:
+    <<: *open5gs
+    container_name: nssf
+    command: open5gs-nssfd -c /config/nssf.yaml
+    volumes: [ "./configs/open5gs/nssf.yaml:/config/nssf.yaml:ro" ]
+    depends_on: *nrf-dep
+    networks:
+      cn: { ipv4_address: 10.88.1.17 }
+
+  dn:
+    image: siscom/dn:1.0
+    build: ./images/dn
+    container_name: dn
+    restart: unless-stopped
+    cpuset: ${CORE_CPUS}
+    cap_add: [NET_ADMIN]
+    # Return route to the UE pool goes through the UPF (N6).
+    command: ["bash", "-c", "ip route replace 10.99.0.0/16 via 10.88.4.3 && exec iperf3 -s"]
+    networks:
+      dn: { ipv4_address: 10.88.4.10 }
+
+  gnb:
+    image: siscom/gnb:24.10.1
+    build: ./images/gnb
+    container_name: gnb
+    profiles: ["ran"]
+    stdin_open: true            # srsRAN needs a TTY or the cell does not start
+    tty: true
+    cpuset: ${GNB_CPUS}
+    cap_add: [SYS_NICE]
+    command: ["-c", "/configs/gnb.yml"]
+    volumes:
+      - ./configs/gnb/gnb_zmq_${BW_MHZ}mhz.yml:/configs/gnb.yml:ro
+      - ./logs:/logs
+      - ./captures:/captures
+    networks:
+      ran: { ipv4_address: 10.88.2.20 }
+      air: { ipv4_address: 10.88.3.20 }
+
+  ue:
+    image: siscom/srsue:25.10
+    build: ./images/srsue
+    container_name: ue
+    profiles: ["ran"]
+    stdin_open: true
+    tty: true
+    cpuset: ${UE_CPUS}
+    cap_add: [NET_ADMIN, SYS_NICE]
+    devices: ["/dev/net/tun:/dev/net/tun"]
+    command: ["/configs/ue.conf"]
+    volumes:
+      - ./configs/ue/ue_zmq_${BW_MHZ}mhz.conf:/configs/ue.conf:ro
+      - ./logs:/logs
+      - ./captures:/captures
+    networks:
+      air: { ipv4_address: 10.88.3.21 }
+
+  tools:
+    image: siscom/tools:1.0
+    build: ./images/tools
+    container_name: tools
+    profiles: ["capture"]
+    network_mode: host
+    cap_add: [NET_ADMIN, NET_RAW]
+    volumes:
+      - ./captures:/captures
+    command: ["sleep", "infinity"]
+
+networks:
+  cn:
+    name: 5g-cn
+    driver_opts: { com.docker.network.bridge.name: br-5g-cn }
+    ipam: { config: [ { subnet: 10.88.1.0/24, gateway: 10.88.1.1 } ] }
+  ran:
+    name: 5g-ran
+    driver_opts: { com.docker.network.bridge.name: br-5g-ran }
+    ipam: { config: [ { subnet: 10.88.2.0/24, gateway: 10.88.2.1 } ] }
+  air:
+    name: 5g-air
+    driver_opts: { com.docker.network.bridge.name: br-5g-air }
+    ipam: { config: [ { subnet: 10.88.3.0/24, gateway: 10.88.3.1 } ] }
+  dn:
+    name: 5g-dn
+    driver_opts: { com.docker.network.bridge.name: br-5g-dn }
+    ipam: { config: [ { subnet: 10.88.4.0/24, gateway: 10.88.4.1 } ] }
+
+volumes:
+  mongo_data:
+    name: 5g-mongo-data

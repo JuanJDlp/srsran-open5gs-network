@@ -1,0 +1,13 @@
+logger:
+  level: info
+
+db_uri: mongodb://10.88.1.5/open5gs
+
+udr:
+  sbi:
+    server:
+      - address: 10.88.1.14
+        port: 7777
+    client:
+      nrf:
+        - uri: http://10.88.1.10:7777

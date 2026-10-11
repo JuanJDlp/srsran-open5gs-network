@@ -1,0 +1,9 @@
+# Runtime artifacts
+logs/*
+!logs/.gitkeep
+captures/*
+!captures/.gitkeep
+# Real SIM keys / secrets never go to git (Phase 2+)
+secrets/
+*.key
+.env

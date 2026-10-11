@@ -1,0 +1,11 @@
+logger:
+  level: info
+
+ausf:
+  sbi:
+    server:
+      - address: 10.88.1.12
+        port: 7777
+    client:
+      nrf:
+        - uri: http://10.88.1.10:7777
