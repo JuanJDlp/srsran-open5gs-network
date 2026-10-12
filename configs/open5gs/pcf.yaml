@@ -1,12 +1,17 @@
+# =====================================================================================================
+# PCF - Policy Control Function (TS 23.501 §6.2.4)
+# Decide políticas: QoS de la sesión (5QI, AMBR), reglas de acceso y movilidad. Lee el perfil del
+# suscriptor de MongoDB (QoS 5QI 9, AMBR 1 Gbps definidos en mongo-init.js).
+# =====================================================================================================
 logger:
   level: info
 
-db_uri: mongodb://10.88.1.5/open5gs
+db_uri: mongodb://10.88.1.5/open5gs   # Open5GS PCF lee las políticas del suscriptor directamente de MongoDB
 
 pcf:
   sbi:
     server:
-      - address: 10.88.1.15
+      - address: 10.88.1.15         # IP del PCF en la red cn
         port: 7777
     client:
       nrf:

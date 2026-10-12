@@ -4,11 +4,14 @@
 #   make verify   end-to-end checks V0-V5
 #   make capture  pcaps per interface (N2/N3, SBI/N4, N6) while re-attaching the UE
 #   make down     stop everything (keeps subscriber DB);  make clean also removes the DB volume
+#   make bler     link-level BLER vs SNR (LDPC/Polar) with srsRAN's PHY (offline, ~3 min)
+#   make measure  TBS log + fixed-MCS sweep + bandwidth sweep on the live network (~20 min)
+#   make analysis tables, plots and results/analysis/resumen.md from results/raw/
 SHELL := /bin/bash
-.PHONY: help build up verify down clean logs ps attach-gnb attach-ue configs capture
+.PHONY: help build up verify down clean logs ps attach-gnb attach-ue configs capture bler measure analysis
 
 help:
-	@sed -n "2,6p" Makefile
+	@sed -n "2,9p" Makefile
 
 build:
 	docker compose --profile ran --profile capture build
@@ -43,3 +46,12 @@ attach-ue:
 
 capture:
 	scripts/capture.sh
+
+bler:
+	scripts/analysis/bler.sh
+
+measure:
+	scripts/measure.sh all
+
+analysis:
+	python3 scripts/analysis/throughput.py

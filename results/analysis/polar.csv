@@ -1,0 +1,6 @@
+caso,K,E,N,K/E,rate_matching
+PBCH (MIB 32 b),56,864,512,0.065,repetición
+DCI 1_0 AL1,63,108,128,0.583,shortening
+DCI 1_0 AL2,63,216,256,0.292,puncturing
+DCI 1_0 AL4,63,432,512,0.146,puncturing
+DCI 1_0 AL8,63,864,512,0.073,repetición

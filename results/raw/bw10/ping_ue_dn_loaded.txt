@@ -1,0 +1,37 @@
+PING 10.88.4.10 (10.88.4.10) from 10.99.0.33 tun_srsue: 56(84) bytes of data.
+64 bytes from 10.88.4.10: icmp_seq=1 ttl=63 time=22.5 ms
+64 bytes from 10.88.4.10: icmp_seq=2 ttl=63 time=18.3 ms
+64 bytes from 10.88.4.10: icmp_seq=3 ttl=63 time=45.7 ms
+64 bytes from 10.88.4.10: icmp_seq=4 ttl=63 time=54.7 ms
+64 bytes from 10.88.4.10: icmp_seq=5 ttl=63 time=63.4 ms
+64 bytes from 10.88.4.10: icmp_seq=6 ttl=63 time=73.8 ms
+64 bytes from 10.88.4.10: icmp_seq=7 ttl=63 time=88.4 ms
+64 bytes from 10.88.4.10: icmp_seq=8 ttl=63 time=98.8 ms
+64 bytes from 10.88.4.10: icmp_seq=9 ttl=63 time=132 ms
+64 bytes from 10.88.4.10: icmp_seq=10 ttl=63 time=115 ms
+64 bytes from 10.88.4.10: icmp_seq=11 ttl=63 time=122 ms
+64 bytes from 10.88.4.10: icmp_seq=12 ttl=63 time=133 ms
+64 bytes from 10.88.4.10: icmp_seq=13 ttl=63 time=143 ms
+64 bytes from 10.88.4.10: icmp_seq=14 ttl=63 time=152 ms
+64 bytes from 10.88.4.10: icmp_seq=15 ttl=63 time=162 ms
+64 bytes from 10.88.4.10: icmp_seq=16 ttl=63 time=172 ms
+64 bytes from 10.88.4.10: icmp_seq=17 ttl=63 time=181 ms
+64 bytes from 10.88.4.10: icmp_seq=18 ttl=63 time=192 ms
+64 bytes from 10.88.4.10: icmp_seq=19 ttl=63 time=202 ms
+64 bytes from 10.88.4.10: icmp_seq=20 ttl=63 time=214 ms
+64 bytes from 10.88.4.10: icmp_seq=21 ttl=63 time=225 ms
+64 bytes from 10.88.4.10: icmp_seq=22 ttl=63 time=231 ms
+64 bytes from 10.88.4.10: icmp_seq=23 ttl=63 time=244 ms
+64 bytes from 10.88.4.10: icmp_seq=24 ttl=63 time=254 ms
+64 bytes from 10.88.4.10: icmp_seq=25 ttl=63 time=264 ms
+64 bytes from 10.88.4.10: icmp_seq=26 ttl=63 time=274 ms
+64 bytes from 10.88.4.10: icmp_seq=27 ttl=63 time=287 ms
+64 bytes from 10.88.4.10: icmp_seq=28 ttl=63 time=296 ms
+64 bytes from 10.88.4.10: icmp_seq=29 ttl=63 time=303 ms
+64 bytes from 10.88.4.10: icmp_seq=30 ttl=63 time=317 ms
+64 bytes from 10.88.4.10: icmp_seq=31 ttl=63 time=326 ms
+64 bytes from 10.88.4.10: icmp_seq=32 ttl=63 time=332 ms
+
+--- 10.88.4.10 ping statistics ---
+32 packets transmitted, 32 received, 0% packet loss, time 6220ms
+rtt min/avg/max/mdev = 18.297/179.317/331.677/92.545 ms, pipe 2

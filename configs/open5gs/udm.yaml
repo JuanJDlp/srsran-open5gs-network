@@ -1,11 +1,16 @@
+# =====================================================================================================
+# UDM - Unified Data Management (TS 23.501 §6.2.7)
+# Gestiona credenciales y perfil del suscriptor: genera los vectores 5G-AKA (con K, OPc y SQN) y
+# entrega los datos de suscripción (slices, DNN). Lee/escribe esos datos a través del UDR.
+# =====================================================================================================
 logger:
   level: info
 
 udm:
   sbi:
     server:
-      - address: 10.88.1.13
-        port: 7777
+      - address: 10.88.1.13         # IP de esta NF en la red cn
+        port: 7777                  # HTTP/2 (SBI)
     client:
       nrf:
-        - uri: http://10.88.1.10:7777
+        - uri: http://10.88.1.10:7777   # se registra en el NRF para que las demás la encuentren

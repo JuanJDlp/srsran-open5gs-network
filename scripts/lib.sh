@@ -5,9 +5,11 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT"
 # shellcheck disable=SC1091
+_overrides="${GNB_OVERRIDES:-}"   # caller's value must win over .env
 set -a; source "$ROOT/.env"; set +a
 BW_MHZ="${BW:-$BW_MHZ}"
-export BW_MHZ
+GNB_OVERRIDES="${_overrides:-$GNB_OVERRIDES}"
+export BW_MHZ GNB_OVERRIDES
 
 GNB_CFG="configs/gnb/gnb_zmq_${BW_MHZ}mhz.yml"
 UE_CFG="configs/ue/ue_zmq_${BW_MHZ}mhz.conf"

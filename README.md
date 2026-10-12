@@ -10,6 +10,9 @@ Red 5G Standalone completa en un solo PC y **toda en contenedores**:
 
 No se instala nada en el host aparte de Docker, ni se tocan sus rutas, `iptables` ni `sysctl`.
 
+Todos los archivos de configuración (`configs/`, `docker-compose.yml`, `.env`) llevan un comentario
+en español al lado de cada entrada que explica qué significa su valor.
+
 ## Arquitectura
 
 ```
@@ -54,6 +57,9 @@ make up        # core -> gNB (NG Setup) -> UE (registro + sesión PDU); tarda ~3
 make verify    # 29 comprobaciones de extremo a extremo (V0-V5); termina con código ≠ 0 si alguna falla
 make capture   # pcaps por interfaz en captures/ mientras el UE se vuelve a registrar
 make down      # para todo y conserva la base de suscriptores (make clean también la borra)
+make bler      # simulación BLER vs SNR de LDPC y Polar con la PHY de srsRAN (sin tocar la red, ~3 min)
+make measure   # TBS reales del scheduler + barrido de MCS fijo + barrido de BW 10/15/20 (~35 min)
+make analysis  # tablas, gráficas y results/analysis/resumen.md a partir de results/raw/
 ```
 
 Otros comandos:
@@ -94,14 +100,32 @@ Las claves son las públicas de los tutoriales de srsRAN y solo valen para simul
 | ping UE → 8.8.8.8 (Internet por la red 5G) | 0 % de pérdida, ~48 ms |
 | Captura en N3 | ICMP del UE (10.99.0.2) encapsulado en GTP-U entre gNB y UPF (TEID 0x2f8) |
 
+## Codificación y rendimiento (rúbrica C2 y C3)
+
+Detalle en `docs/analisis-codificacion.md` y `docs/rendimiento.md`. Datos crudos en `results/raw/` y
+tablas y figuras en `results/analysis/`.
+
+| Resultado | Valor |
+|---|---|
+| TBS calculado (TS 38.214) vs scheduler del gNB | 213/213 asignaciones idénticas byte a byte |
+| SNR para BLER 10 % (AWGN, PHY de srsRAN) | MCS 0: −5.5 dB · MCS 9: 3.7 dB · MCS 28: 21.2 dB (1.4-4.8 dB por encima de Shannon) |
+| Canal ZMQ | SNR de PUSCH 65 dB → CQI 15, MCS 28 en DL y UL, 0 % de NACK |
+| MAC / TCP, 10 MHz | DL 28.1 / 26.4 · UL 33.2 / 30.1 Mbit/s (TBS×1000: 31.8 / 33.8) |
+| MAC / TCP, 20 MHz | DL 58.3 / 45.1 · UL 72.4 / 46.5 Mbit/s |
+| 15 MHz | el DL no mejora (PDSCH limitado a los 48 RB de CORESET#0 con DCI 1_0); el UL sí (52 Mbit/s) |
+| RTT | 29 ms en reposo (0.1 ms es la parte cableada); ~180 ms con el DL saturado (cola del gNB) |
+
 ## Decisiones y problemas resueltos
 
 | Problema | Causa | Solución |
 |---|---|---|
+| `[upf] ERROR: Invalid packet [IP version:6]` en cada registro | `tun_srsue` envía un Router Solicitation IPv6 y la sesión es solo IPv4 | IPv6 desactivado dentro del contenedor del UE (`sysctls` en compose) |
 | El UE se registra y luego recibe `RRC Release` tras 3 s | srsUE 25.10 no descifra NAS con NEA2: el Registration Accept se decodifica como basura (`Unsupported extended protocol discriminator`) y el gNB expira esperando la sesión PDU | AMF con `ciphering_order: [NEA0, NEA1, NEA2]`, el orden por defecto de Open5GS. La integridad NIA2 se mantiene |
 | `Unable to derive a valid SSB pointA ... CORESET#0 index=12` a 10 MHz | El índice 12 ocupa 96 RB y solo cabe en 20 MHz | Índice 6 (48 RB) a 10 y 15 MHz (TS 38.213, tabla 13-1) |
 | 5 MHz no funciona | Con 25 PRB solo caben CORESET#0 de 24 RB (índices 0-5) y srsUE no encuentra la celda con ellos | Perfil de 5 MHz descartado |
 | La imagen de srsUE quedaba sin binario | srsRAN 4G define `CMAKE_SKIP_INSTALL_ALL_DEPENDENCY` | `make srsue srsran_rf_zmq` antes de `make install` |
+| `[channel.dl.awgn]` de srsUE no añade ruido en 5G SA | El emulador de canal solo está conectado en la ruta LTE (`sync.cc`, no `sync_sa.cc`) | El canal se estudia offline con `make bler` (imagen `phy-sim`) |
+| `polar_chain_test` aborta (`double free`) con E < N | Bug de la prueba upstream: recorre `BATCH_SIZE*N` LLR en un buffer de `BATCH_SIZE*E` | Parche con `sed` en `images/phy-sim/Dockerfile` |
 | La WebUI no permitía iniciar sesión | En producción no crea `admin`, y un hash sembrado a mano no es PBKDF2 válido | `up.sh` crea el admin con `Account.register` de la propia WebUI |
 | 5G-AKA fallaba con HTTP 500 | Campos numéricos del suscriptor guardados como `double` | `NumberInt`/`NumberLong` en `configs/open5gs/mongo-init.js` |
 
@@ -110,10 +134,14 @@ Las claves son las públicas de los tutoriales de srsRAN y solo valen para simul
 ```
 docker-compose.yml       servicios, redes y volúmenes (gnb/ue en el perfil "ran", tools en "capture")
 .env                     versiones, ancho de banda y reparto de CPU
-images/                  Dockerfiles: gnb, srsue, dn (iperf3), tools (tcpdump/tshark)
+images/                  Dockerfiles: gnb, srsue, dn (iperf3), tools (tcpdump/tshark), phy-sim (BLER/Polar)
 configs/open5gs/         YAML de cada NF + mongo-init.js (suscriptor)
 configs/gnb, configs/ue  generados con scripts/gen-radio-configs.sh (no editar a mano)
-scripts/                 up.sh, verify.sh, capture.sh, down.sh, upf-entrypoint.sh, gen-radio-configs.sh
+configs/gnb/gnb_overrides.yml  2.º archivo del gNB (MCS fijo, métricas); measure.sh pone el suyo
+scripts/                 up.sh, verify.sh, capture.sh, down.sh, upf-entrypoint.sh, gen-radio-configs.sh,
+                         measure.sh (mediciones), analysis/bler.sh y analysis/throughput.py (análisis)
+docs/                    analisis-codificacion.md (MCS, LDPC/Polar) y rendimiento.md (medidas y análisis)
+results/raw/             datos crudos de las mediciones; results/analysis/ CSVs, figuras y resumen.md
 captures/ logs/          artefactos de ejecución (ignorados por git)
 ```
 

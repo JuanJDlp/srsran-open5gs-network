@@ -1,57 +1,64 @@
-# 5G SA lab: Open5GS 5GC (one NF per container) + srsRAN Project gNB + srsUE over ZeroMQ.
-# One Docker network per 3GPP interface group:
-#   cn  10.88.1.0/24  SBI (HTTP/2) + N4 (PFCP)
-#   ran 10.88.2.0/24  N2 (NGAP/SCTP) + N3 (GTP-U)
-#   air 10.88.3.0/24  simulated Uu (ZMQ IQ samples)
-#   dn  10.88.4.0/24  N6 (data network)
-# Core starts with `docker compose up -d`; gnb/ue (profile "ran") are started in order by scripts/up.sh.
+# =====================================================================================================
+# Red 5G SA completa: core Open5GS (una función de red por contenedor) + gNB srsRAN Project + srsUE,
+# con la radio simulada por ZeroMQ. Referencia de sintaxis: https://docs.docker.com/reference/compose-file/
+#
+# Una red Docker por grupo de interfaces 3GPP (capturar en su bridge = capturar esa interfaz):
+#   cn  10.88.1.0/24  SBI (HTTP/2 entre NFs) + N4 (PFCP SMF<->UPF)
+#   ran 10.88.2.0/24  N2 (NGAP/SCTP gNB<->AMF) + N3 (GTP-U gNB<->UPF)
+#   air 10.88.3.0/24  Uu simulada (muestras IQ por ZMQ gNB<->UE)
+#   dn  10.88.4.0/24  N6 (UPF <-> red de datos)
+#
+# `docker compose up -d` levanta solo el core + dn. gnb/ue están en el perfil "ran" y los arranca
+# scripts/up.sh EN ORDEN (gNB primero, UE después). tools está en el perfil "capture".
+# Variables ${...} vienen de .env
+# =====================================================================================================
 
-x-open5gs: &open5gs
-  image: gradiant/open5gs:${OPEN5GS_VERSION}
-  restart: unless-stopped
-  cpuset: ${CORE_CPUS}
+x-open5gs: &open5gs                 # plantilla YAML reutilizada por todas las NFs de Open5GS ("ancla")
+  image: gradiant/open5gs:${OPEN5GS_VERSION}   # imagen comunitaria con todos los binarios open5gs-*d
+  restart: unless-stopped           # si una NF se cae, Docker la reinicia
+  cpuset: ${CORE_CPUS}              # núcleos de CPU del core (separados de la radio, ver .env)
 
-x-nrf-dep: &nrf-dep
+x-nrf-dep: &nrf-dep                 # plantilla: "arranca solo cuando el NRF esté sano"
   nrf:
     condition: service_healthy
 
 services:
-  mongo:
+  mongo:                            # base de datos de suscriptores (la usan UDR, PCF y WebUI)
     image: mongo:${MONGO_VERSION}
     container_name: mongo
     restart: unless-stopped
     cpuset: ${CORE_CPUS}
     volumes:
-      - mongo_data:/data/db
-      - ./configs/open5gs/mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
-    healthcheck:
+      - mongo_data:/data/db         # datos persistentes (sobreviven a `make down`; `make clean` los borra)
+      - ./configs/open5gs/mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro   # siembra del suscriptor
+    healthcheck:                    # "sano" cuando responde a un ping de MongoDB
       test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping').ok"]
       interval: 3s
       timeout: 3s
       retries: 40
     networks:
-      cn: { ipv4_address: 10.88.1.5 }
+      cn: { ipv4_address: 10.88.1.5 }   # no se publica al host: nadie fuera de Docker puede tocar la BD
 
-  webui:
+  webui:                            # interfaz web de Open5GS para ver/editar suscriptores
     image: gradiant/open5gs-webui:${OPEN5GS_VERSION}
     container_name: webui
     restart: unless-stopped
     cpuset: ${CORE_CPUS}
     environment:
-      DB_URI: mongodb://10.88.1.5/open5gs
+      DB_URI: mongodb://10.88.1.5/open5gs   # base de datos que muestra
     ports:
-      - "127.0.0.1:3000:9999"
+      - "127.0.0.1:3000:9999"       # http://127.0.0.1:3000 solo desde este PC (admin / 1423)
     depends_on:
       mongo: { condition: service_healthy }
     networks:
       cn: { ipv4_address: 10.88.1.6 }
 
-  nrf:
-    <<: *open5gs
+  nrf:                              # NRF: directorio de NFs (todas se registran aquí)
+    <<: *open5gs                    # hereda imagen, restart y cpuset de la plantilla
     container_name: nrf
-    command: open5gs-nrfd -c /config/nrf.yaml
-    volumes: [ "./configs/open5gs/nrf.yaml:/config/nrf.yaml:ro" ]
-    healthcheck:
+    command: open5gs-nrfd -c /config/nrf.yaml   # binario de la NF + su archivo de configuración
+    volumes: [ "./configs/open5gs/nrf.yaml:/config/nrf.yaml:ro" ]   # el YAML del repo, solo lectura
+    healthcheck:                    # "sano" cuando acepta conexiones TCP en su puerto SBI
       test: ["CMD", "bash", "-c", "</dev/tcp/10.88.1.10/7777"]
       interval: 2s
       timeout: 2s
@@ -59,17 +66,17 @@ services:
     networks:
       cn: { ipv4_address: 10.88.1.10 }
 
-  amf:
+  amf:                              # AMF: registro, autenticación y movilidad; termina N1 (NAS) y N2 (NGAP)
     <<: *open5gs
     container_name: amf
     command: open5gs-amfd -c /config/amf.yaml
     volumes: [ "./configs/open5gs/amf.yaml:/config/amf.yaml:ro" ]
     depends_on: *nrf-dep
     networks:
-      cn: { ipv4_address: 10.88.1.2 }
-      ran: { ipv4_address: 10.88.2.2 }
+      cn: { ipv4_address: 10.88.1.2 }    # SBI hacia las otras NFs
+      ran: { ipv4_address: 10.88.2.2 }   # N2: aquí llega el gNB (SCTP 38412)
 
-  smf:
+  smf:                              # SMF: sesiones PDU, IP del UE, controla al UPF por N4
     <<: *open5gs
     container_name: smf
     command: open5gs-smfd -c /config/smf.yaml
@@ -78,26 +85,26 @@ services:
     networks:
       cn: { ipv4_address: 10.88.1.11 }
 
-  upf:
+  upf:                              # UPF: plano de usuario (N3 <-> N6)
     <<: *open5gs
     container_name: upf
-    user: root
-    entrypoint: ["/bin/bash", "/scripts/upf-entrypoint.sh"]
+    user: root                      # necesita root para crear la interfaz TUN ogstun
+    entrypoint: ["/bin/bash", "/scripts/upf-entrypoint.sh"]   # crea ogstun, rutas y NAT; luego lanza open5gs-upfd
     command: []
     volumes:
       - ./configs/open5gs/upf.yaml:/config/upf.yaml:ro
       - ./scripts/upf-entrypoint.sh:/scripts/upf-entrypoint.sh:ro
-    cap_add: [NET_ADMIN]
-    devices: ["/dev/net/tun:/dev/net/tun"]
+    cap_add: [NET_ADMIN]            # permiso para configurar interfaces, rutas e iptables DENTRO del contenedor
+    devices: ["/dev/net/tun:/dev/net/tun"]   # acceso al driver TUN del kernel (para ogstun)
     sysctls:
-      net.ipv4.ip_forward: 1
+      net.ipv4.ip_forward: 1        # el contenedor reenvía paquetes (hace de router); el host no se toca
     depends_on: *nrf-dep
     networks:
-      cn: { ipv4_address: 10.88.1.3 }
-      ran: { ipv4_address: 10.88.2.3 }
-      dn: { ipv4_address: 10.88.4.3 }
+      cn: { ipv4_address: 10.88.1.3 }    # N4 (PFCP con el SMF)
+      ran: { ipv4_address: 10.88.2.3 }   # N3 (GTP-U con el gNB)
+      dn: { ipv4_address: 10.88.4.3 }    # N6 (salida a la red de datos)
 
-  ausf:
+  ausf:                             # AUSF: autenticación 5G-AKA
     <<: *open5gs
     container_name: ausf
     command: open5gs-ausfd -c /config/ausf.yaml
@@ -106,7 +113,7 @@ services:
     networks:
       cn: { ipv4_address: 10.88.1.12 }
 
-  udm:
+  udm:                              # UDM: credenciales y datos de suscripción
     <<: *open5gs
     container_name: udm
     command: open5gs-udmd -c /config/udm.yaml
@@ -115,18 +122,18 @@ services:
     networks:
       cn: { ipv4_address: 10.88.1.13 }
 
-  udr:
+  udr:                              # UDR: repositorio de datos (lee/escribe MongoDB)
     <<: *open5gs
     container_name: udr
     command: open5gs-udrd -c /config/udr.yaml
     volumes: [ "./configs/open5gs/udr.yaml:/config/udr.yaml:ro" ]
     depends_on:
       nrf: { condition: service_healthy }
-      mongo: { condition: service_healthy }
+      mongo: { condition: service_healthy }   # necesita la BD lista
     networks:
       cn: { ipv4_address: 10.88.1.14 }
 
-  pcf:
+  pcf:                              # PCF: políticas y QoS
     <<: *open5gs
     container_name: pcf
     command: open5gs-pcfd -c /config/pcf.yaml
@@ -137,7 +144,7 @@ services:
     networks:
       cn: { ipv4_address: 10.88.1.15 }
 
-  bsf:
+  bsf:                              # BSF: binding sesión <-> PCF
     <<: *open5gs
     container_name: bsf
     command: open5gs-bsfd -c /config/bsf.yaml
@@ -146,7 +153,7 @@ services:
     networks:
       cn: { ipv4_address: 10.88.1.16 }
 
-  nssf:
+  nssf:                             # NSSF: selección de slice
     <<: *open5gs
     container_name: nssf
     command: open5gs-nssfd -c /config/nssf.yaml
@@ -155,69 +162,73 @@ services:
     networks:
       cn: { ipv4_address: 10.88.1.17 }
 
-  dn:
+  dn:                               # "Data Network": servidor de pruebas al otro lado de N6 (ping/iperf3)
     image: siscom/dn:1.0
-    build: ./images/dn
+    build: ./images/dn              # imagen propia: Ubuntu + iperf3 + iproute2
     container_name: dn
     restart: unless-stopped
     cpuset: ${CORE_CPUS}
-    cap_add: [NET_ADMIN]
+    cap_add: [NET_ADMIN]            # para añadir su ruta de vuelta
     # Return route to the UE pool goes through the UPF (N6).
+    # Ruta de vuelta hacia los UEs (10.99.0.0/16) a través del UPF; luego deja iperf3 escuchando en 5201
     command: ["bash", "-c", "ip route replace 10.99.0.0/16 via 10.88.4.3 && exec iperf3 -s"]
     networks:
       dn: { ipv4_address: 10.88.4.10 }
 
-  gnb:
+  gnb:                              # estación base 5G (srsRAN Project)
     image: siscom/gnb:24.10.1
-    build: ./images/gnb
+    build: ./images/gnb             # se compila desde el código fuente (tag release_24_10_1, con ZMQ)
     container_name: gnb
-    profiles: ["ran"]
+    profiles: ["ran"]               # no arranca con `docker compose up`; lo arranca scripts/up.sh
     stdin_open: true            # srsRAN needs a TTY or the cell does not start
-    tty: true
-    cpuset: ${GNB_CPUS}
-    cap_add: [SYS_NICE]
-    command: ["-c", "/configs/gnb.yml"]
+    tty: true                       # (consola interactiva: `make attach-gnb`, tecla t = métricas)
+    cpuset: ${GNB_CPUS}             # núcleos reservados para la radio del gNB
+    cap_add: [SYS_NICE]             # permite a srsRAN subir la prioridad de sus hilos de tiempo real
+    command: ["-c", "/configs/gnb.yml", "-c", "/configs/gnb_overrides.yml"]   # perfil de radio + ajustes (el 2.º gana)
     volumes:
-      - ./configs/gnb/gnb_zmq_${BW_MHZ}mhz.yml:/configs/gnb.yml:ro
-      - ./logs:/logs
-      - ./captures:/captures
+      - ./configs/gnb/gnb_zmq_${BW_MHZ}mhz.yml:/configs/gnb.yml:ro   # perfil de ancho de banda elegido
+      - ${GNB_OVERRIDES}:/configs/gnb_overrides.yml:ro   # ajustes extra (MCS fijo, métricas); ver .env
+      - ./logs:/logs                # logs/gnb.log
+      - ./captures:/captures        # pcaps MAC y NGAP del gNB
     networks:
-      ran: { ipv4_address: 10.88.2.20 }
-      air: { ipv4_address: 10.88.3.20 }
+      ran: { ipv4_address: 10.88.2.20 }  # N2 y N3
+      air: { ipv4_address: 10.88.3.20 }  # radio simulada (ZMQ)
 
-  ue:
+  ue:                               # teléfono 5G simulado (srsUE)
     image: siscom/srsue:25.10
-    build: ./images/srsue
+    build: ./images/srsue           # se compila desde el código fuente (srsRAN 4G release_25_10, con ZMQ)
     container_name: ue
     profiles: ["ran"]
     stdin_open: true
-    tty: true
-    cpuset: ${UE_CPUS}
-    cap_add: [NET_ADMIN, SYS_NICE]
+    tty: true                       # consola: `make attach-ue`
+    cpuset: ${UE_CPUS}              # núcleos reservados para el UE
+    cap_add: [NET_ADMIN, SYS_NICE]  # NET_ADMIN para crear tun_srsue y su ruta
     devices: ["/dev/net/tun:/dev/net/tun"]
-    command: ["/configs/ue.conf"]
+    sysctls:                        # IPv6 apagado en el UE: si no, tun_srsue manda un Router Solicitation IPv6
+      net.ipv6.conf.all.disable_ipv6: 1   # que el UPF descarta ("Invalid packet [IP version:6]") en una sesión IPv4
+    command: ["/configs/ue.conf"]   # srsUE recibe el archivo de config como argumento (sin -c)
     volumes:
       - ./configs/ue/ue_zmq_${BW_MHZ}mhz.conf:/configs/ue.conf:ro
       - ./logs:/logs
       - ./captures:/captures
     networks:
-      air: { ipv4_address: 10.88.3.21 }
+      air: { ipv4_address: 10.88.3.21 } # el UE SOLO está en la red air: su único camino al core es la radio
 
-  tools:
+  tools:                            # contenedor auxiliar de capturas (tcpdump/tshark), perfil "capture"
     image: siscom/tools:1.0
     build: ./images/tools
     container_name: tools
     profiles: ["capture"]
-    network_mode: host
-    cap_add: [NET_ADMIN, NET_RAW]
+    network_mode: host              # ve los bridges br-5g-* del host para capturar en ellos
+    cap_add: [NET_ADMIN, NET_RAW]   # permisos de captura de paquetes
     volumes:
       - ./captures:/captures
-    command: ["sleep", "infinity"]
+    command: ["sleep", "infinity"]  # queda en espera; capture.sh le ejecuta tcpdump
 
-networks:
+networks:                           # una red (bridge Linux) por grupo de interfaces
   cn:
     name: 5g-cn
-    driver_opts: { com.docker.network.bridge.name: br-5g-cn }
+    driver_opts: { com.docker.network.bridge.name: br-5g-cn }    # nombre fijo del bridge en el host
     ipam: { config: [ { subnet: 10.88.1.0/24, gateway: 10.88.1.1 } ] }
   ran:
     name: 5g-ran
@@ -230,8 +241,8 @@ networks:
   dn:
     name: 5g-dn
     driver_opts: { com.docker.network.bridge.name: br-5g-dn }
-    ipam: { config: [ { subnet: 10.88.4.0/24, gateway: 10.88.4.1 } ] }
+    ipam: { config: [ { subnet: 10.88.4.0/24, gateway: 10.88.4.1 } ] }   # gateway .1 = salida a Internet (NAT de Docker)
 
 volumes:
   mongo_data:
-    name: 5g-mongo-data
+    name: 5g-mongo-data             # volumen con la base de suscriptores

@@ -1,0 +1,15 @@
+# Ajustes del gNB que se cargan DESPUÉS de gnb_zmq_<BW>mhz.yml (segundo "-c" en docker-compose.yml).
+# srsRAN Project fusiona ambos archivos: lo que se ponga aquí reemplaza o completa al perfil de radio.
+# scripts/measure.sh usa otro archivo con esta misma forma para fijar el MCS en los barridos
+# (variable GNB_OVERRIDES de .env). Estos valores son los de fábrica: no cambian el comportamiento.
+
+cell_cfg:
+  pdsch:                            # canal compartido de bajada (datos DL)
+    min_ue_mcs: 0                   # MCS mínimo que puede elegir el scheduler (0 = QPSK, tasa ~0.12)
+    max_ue_mcs: 28                  # MCS máximo (28 = 64QAM, tasa 948/1024). min = max fija el MCS
+  pusch:                            # canal compartido de subida (datos UL)
+    min_ue_mcs: 0                   # igual que arriba, para la subida
+    max_ue_mcs: 28
+
+metrics:
+  autostart_stdout_metrics: false   # true = el gNB imprime su tabla de métricas cada segundo en `docker logs gnb`

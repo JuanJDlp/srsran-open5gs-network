@@ -1,12 +1,17 @@
+# =====================================================================================================
+# UDR - Unified Data Repository (TS 23.501 §6.2.11)
+# Base de datos lógica del core: el UDM y el PCF le piden los datos del suscriptor (K, OPc, SQN,
+# slices, QoS...). En Open5GS el UDR guarda todo en MongoDB.
+# =====================================================================================================
 logger:
   level: info
 
-db_uri: mongodb://10.88.1.5/open5gs
+db_uri: mongodb://10.88.1.5/open5gs   # MongoDB (contenedor "mongo"), base "open5gs", colección "subscribers"
 
 udr:
   sbi:
     server:
-      - address: 10.88.1.14
+      - address: 10.88.1.14         # IP del UDR en la red cn
         port: 7777
     client:
       nrf:

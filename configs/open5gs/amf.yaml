@@ -1,48 +1,56 @@
+# =====================================================================================================
+# AMF - Access and Mobility Management Function (TS 23.501 §6.2.1)
+# "Portero" de la red: recibe al gNB (N2) y al UE (N1/NAS), autentica (con AUSF), activa la
+# seguridad NAS, lleva el registro/movilidad y pide al SMF las sesiones de datos.
+# Ref. de todas las claves: /opt/open5gs/etc/open5gs/amf.yaml dentro de la imagen gradiant/open5gs:2.7.7
+# =====================================================================================================
 logger:
-  level: info
+  level: info                       # detalle del log: fatal|error|warn|info|debug|trace (docker logs amf)
 
 amf:
-  sbi:
+  sbi:                              # SBI = Service Based Interface: HTTP/2 + JSON entre funciones del core
     server:
-      - address: 10.88.1.2          # cn network
-        port: 7777
+      - address: 10.88.1.2          # IP del AMF en la red "cn" (5g-cn); otras NFs le hablan aquí
+        port: 7777                  # puerto HTTP/2 que usa Open5GS para todas las NFs
     client:
       nrf:
-        - uri: http://10.88.1.10:7777
-  ngap:
+        - uri: http://10.88.1.10:7777   # dónde está el NRF (directorio de NFs): el AMF se registra ahí
+                                        # y por él descubre AUSF, UDM, SMF, PCF... (Nnrf)
+  ngap:                             # NGAP = protocolo de la interfaz N2 (gNB <-> AMF), va sobre SCTP
     server:
-      - address: 10.88.2.2          # ran network (N2)
+      - address: 10.88.2.2          # IP del AMF en la red "ran" (5g-ran); el gNB se conecta aquí al 38412/sctp
   metrics:
     server:
-      - address: 10.88.1.2
+      - address: 10.88.1.2          # métricas Prometheus del AMF (nº de UEs, gNBs...) en http://10.88.1.2:9090/metrics
         port: 9090
-  guami:
+  guami:                            # GUAMI = identificador global del AMF = PLMN + AMF Region + AMF Set (+ pointer)
     - plmn_id:
-        mcc: 001
-        mnc: 01
+        mcc: 001                    # MCC 001 = código de país de PRUEBAS (no es un país real)
+        mnc: 01                     # MNC 01 = operador de pruebas -> PLMN "00101"
       amf_id:
-        region: 2
-        set: 1
-  tai:
+        region: 2                   # AMF Region ID (8 bits): agrupa AMFs por región; valor de ejemplo
+        set: 1                      # AMF Set ID (10 bits): AMFs intercambiables dentro de la región
+  tai:                              # TAI = Tracking Area Identity (PLMN + TAC) que este AMF atiende
     - plmn_id:
         mcc: 001
         mnc: 01
-      tac: 7
-  plmn_support:
+      tac: 7                        # TAC 7: DEBE coincidir con "tac" del gNB, si no el NG Setup se rechaza
+  plmn_support:                     # PLMNs y slices (S-NSSAI) que acepta; se anuncian al gNB en el NG Setup
     - plmn_id:
         mcc: 001
         mnc: 01
       s_nssai:
-        - sst: 1
-  security:
-    integrity_order: [NIA2, NIA1, NIA0]
+        - sst: 1                    # SST 1 = slice eMBB (banda ancha móvil). Sin SD (diferenciador)
+  security:                         # algoritmos de seguridad NAS en orden de preferencia (TS 33.501 Anexo D)
+    integrity_order: [NIA2, NIA1, NIA0]   # integridad: NIA2 (AES) primero -> mensajes NAS autenticados
     # srsUE 25.10 fails to decipher NEA2 NAS (Registration Accept decodes as garbage);
     # NEA0 first = Open5GS default, the setup used by the srsRAN tutorials. Integrity stays NIA2.
-    ciphering_order: [NEA0, NEA1, NEA2]
-  network_name:
+    ciphering_order: [NEA0, NEA1, NEA2]   # cifrado: NEA0 = SIN cifrado. Obligatorio con srsUE (ver arriba);
+                                          # efecto colateral útil: Wireshark puede leer el NAS en claro
+  network_name:                     # nombre de red que el UE muestra (enviado en Configuration Update Command)
     full: SISCOM2 5G Lab
     short: SISCOM2
-  amf_name: open5gs-amf0
+  amf_name: open5gs-amf0            # nombre del AMF que va en el NG Setup Response (aparece en el log del gNB)
   time:
     t3512:
-      value: 540
+      value: 540                    # T3512 (s): cada cuánto el UE hace "registro periódico" (9 min)

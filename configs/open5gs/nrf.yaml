@@ -1,12 +1,17 @@
+# =====================================================================================================
+# NRF - Network Repository Function (TS 23.501 §6.2.6)
+# Directorio del core: cada NF se registra aquí (con heartbeat cada 10 s) y pregunta "¿dónde hay un
+# AUSF/UDM/SMF...?" (descubrimiento). Es la pieza central de la arquitectura basada en servicios (SBA).
+# =====================================================================================================
 logger:
   level: info
 
 nrf:
-  serving:
+  serving:                          # PLMN a la que sirve este NRF (necesario para roaming; aquí solo la nuestra)
     - plmn_id:
         mcc: 001
         mnc: 01
   sbi:
     server:
-      - address: 10.88.1.10
+      - address: 10.88.1.10         # todas las NFs apuntan aquí ("client: nrf: uri") en su YAML
         port: 7777

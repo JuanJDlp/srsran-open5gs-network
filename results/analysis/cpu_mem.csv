@@ -1,0 +1,73 @@
+bw_mhz,fase,contenedor,cpu_pct,mem_mib
+10,reposo,amf,0.0,395.0
+10,reposo,gnb,170.5,2342.0
+10,reposo,mongo,41.7,132.0
+10,reposo,smf,0.0,35.0
+10,reposo,ue,47.6,331.0
+10,reposo,upf,0.0,20.0
+10,TCP DL,amf,0.0,395.0
+10,TCP DL,gnb,218.6,2311.0
+10,TCP DL,mongo,35.4,77.0
+10,TCP DL,smf,0.0,35.0
+10,TCP DL,ue,134.2,298.0
+10,TCP DL,upf,11.5,20.0
+10,UDP UL,amf,0.0,395.0
+10,UDP UL,gnb,192.4,2338.0
+10,UDP UL,mongo,17.1,77.0
+10,UDP UL,smf,0.0,35.0
+10,UDP UL,ue,72.5,324.0
+10,UDP UL,upf,2.6,20.0
+10,UDP DL saturado,amf,0.0,395.0
+10,UDP DL saturado,gnb,220.6,2340.0
+10,UDP DL saturado,mongo,22.0,134.0
+10,UDP DL saturado,smf,0.0,35.0
+10,UDP DL saturado,ue,141.9,329.0
+10,UDP DL saturado,upf,15.2,20.0
+15,reposo,amf,0.0,407.0
+15,reposo,gnb,172.2,2358.0
+15,reposo,mongo,28.4,77.0
+15,reposo,smf,0.0,35.0
+15,reposo,ue,48.2,343.0
+15,reposo,upf,0.0,20.0
+15,TCP DL,amf,0.0,407.0
+15,TCP DL,gnb,222.8,2325.0
+15,TCP DL,mongo,27.3,103.0
+15,TCP DL,smf,0.0,35.0
+15,TCP DL,ue,144.1,307.0
+15,TCP DL,upf,13.0,20.0
+15,UDP UL,amf,0.0,407.0
+15,UDP UL,gnb,197.6,2355.0
+15,UDP UL,mongo,25.2,122.0
+15,UDP UL,smf,0.0,35.0
+15,UDP UL,ue,78.7,338.0
+15,UDP UL,upf,2.7,20.0
+15,UDP DL saturado,amf,0.0,407.0
+15,UDP DL saturado,gnb,231.3,2356.0
+15,UDP DL saturado,mongo,30.2,100.0
+15,UDP DL saturado,smf,0.0,35.0
+15,UDP DL saturado,ue,158.7,342.0
+15,UDP DL saturado,upf,16.6,20.0
+20,reposo,amf,0.0,420.0
+20,reposo,gnb,181.2,2378.0
+20,reposo,mongo,0.9,77.0
+20,reposo,smf,0.0,35.0
+20,reposo,ue,63.2,363.0
+20,reposo,upf,0.0,19.0
+20,TCP DL,amf,0.0,420.0
+20,TCP DL,gnb,244.9,2343.0
+20,TCP DL,mongo,31.4,77.0
+20,TCP DL,smf,0.0,35.0
+20,TCP DL,ue,226.6,325.0
+20,TCP DL,upf,17.4,20.0
+20,UDP UL,amf,0.0,420.0
+20,UDP UL,gnb,196.0,2373.0
+20,UDP UL,mongo,20.8,99.0
+20,UDP UL,smf,0.0,35.0
+20,UDP UL,ue,83.3,359.0
+20,UDP UL,upf,2.2,19.0
+20,UDP DL saturado,amf,0.0,420.0
+20,UDP DL saturado,gnb,252.7,2375.0
+20,UDP DL saturado,mongo,30.8,140.0
+20,UDP DL saturado,smf,0.0,35.0
+20,UDP DL saturado,ue,233.8,362.0
+20,UDP DL saturado,upf,19.4,19.0

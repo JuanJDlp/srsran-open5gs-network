@@ -1,11 +1,16 @@
+# =====================================================================================================
+# AUSF - Authentication Server Function (TS 23.501 §6.2.8)
+# Ejecuta la autenticación 5G-AKA: pide al UDM el vector de autenticación y compara la respuesta
+# (RES*) que el UE calcula con su K/OPc. Si coincide, el UE es quien dice ser.
+# =====================================================================================================
 logger:
   level: info
 
 ausf:
   sbi:
     server:
-      - address: 10.88.1.12
-        port: 7777
+      - address: 10.88.1.12         # IP de esta NF en la red cn
+        port: 7777                  # HTTP/2 (SBI)
     client:
       nrf:
-        - uri: http://10.88.1.10:7777
+        - uri: http://10.88.1.10:7777   # se registra en el NRF para que las demás la encuentren

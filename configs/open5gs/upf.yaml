@@ -1,14 +1,21 @@
+# =====================================================================================================
+# UPF - User Plane Function (TS 23.501 §6.2.3)
+# El "router" del 5G: recibe los paquetes del UE encapsulados en GTP-U desde el gNB (N3), los
+# desencapsula y los saca a la red de datos (N6), y al revés. Obedece las reglas que le manda el SMF (N4).
+# La interfaz ogstun, las rutas y el NAT los crea scripts/upf-entrypoint.sh antes de arrancar este proceso.
+# =====================================================================================================
 logger:
   level: info
 
 upf:
   pfcp:
     server:
-      - address: 10.88.1.3          # N4 (cn network)
+      - address: 10.88.1.3          # N4: escucha PFCP (UDP 8805) en la red cn; el SMF se asocia aquí
   gtpu:
     server:
-      - address: 10.88.2.3          # N3 (ran network)
+      - address: 10.88.2.3          # N3: escucha GTP-U (UDP 2152) en la red ran; esta IP se le pasa al gNB
+                                    # (vía SMF->AMF->NGAP) como destino del túnel de subida
   session:
-    - subnet: 10.99.0.0/16
+    - subnet: 10.99.0.0/16          # mismo pool que el SMF: el UPF sabe que esas IPs "viven" detrás de ogstun
       gateway: 10.99.0.1
       dnn: internet

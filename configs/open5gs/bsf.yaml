@@ -1,11 +1,16 @@
+# =====================================================================================================
+# BSF - Binding Support Function (TS 23.501 §6.2.15)
+# Recuerda qué PCF atiende cada sesión (binding). Útil con varios PCF o servicios tipo IMS;
+# en este laboratorio está para tener el core 5G completo.
+# =====================================================================================================
 logger:
   level: info
 
 bsf:
   sbi:
     server:
-      - address: 10.88.1.16
-        port: 7777
+      - address: 10.88.1.16         # IP de esta NF en la red cn
+        port: 7777                  # HTTP/2 (SBI)
     client:
       nrf:
-        - uri: http://10.88.1.10:7777
+        - uri: http://10.88.1.10:7777   # se registra en el NRF para que las demás la encuentren

@@ -1,0 +1,46 @@
+   3091 UE PUSCH: ue=0 c-rnti=0x4601 rb=[3..76) symb=[0..14) tbs=6661 rv=0 olla=0.00 k2=4 uci: harq_bits=1 csi-1_bits=0 csi-2_present=No mcs=28
+    249 UE PUSCH: ue=0 c-rnti=0x4601 rb=[3..9) symb=[0..14) tbs=544 rv=0 olla=0.00 k2=4 uci: harq_bits=1 csi-1_bits=0 csi-2_present=No mcs=28
+    166 UE PUSCH: ue=0 c-rnti=0x4601 rb=[3..76) symb=[0..14) tbs=6661 rv=0 olla=0.00 k2=4 uci: harq_bits=1 csi-1_bits=4 csi-2_present=No mcs=28
+    106 UE PUSCH: ue=0 c-rnti=0x4601 rb=[3..5) symb=[0..14) tbs=177 rv=0 olla=0.00 k2=4 uci: harq_bits=1 csi-1_bits=0 csi-2_present=No mcs=28
+    101 UE PUSCH: ue=0 c-rnti=0x4601 rb=[3..7) symb=[0..14) tbs=372 rv=0 olla=0.00 k2=4 uci: harq_bits=1 csi-1_bits=0 csi-2_present=No mcs=28
+     87 UE PUSCH: ue=0 c-rnti=0x4601 rb=[3..6) symb=[0..14) tbs=277 rv=0 olla=0.00 k2=4 uci: harq_bits=1 csi-1_bits=0 csi-2_present=No mcs=28
+     85 UE PUSCH: ue=0 c-rnti=0x4601 rb=[3..76) symb=[0..14) tbs=6661 rv=0 olla=0.00 k2=4 mcs=28
+     79 UE PUSCH: ue=0 c-rnti=0x4601 rb=[3..4) symb=[0..14) tbs=88 rv=0 olla=0.00 k2=4 uci: harq_bits=1 csi-1_bits=0 csi-2_present=No mcs=28
+     64 UE PUSCH: ue=0 c-rnti=0x4601 rb=[3..8) symb=[0..14) tbs=437 rv=0 olla=0.00 k2=4 uci: harq_bits=1 csi-1_bits=0 csi-2_present=No mcs=28
+     50 UE PUSCH: ue=0 c-rnti=0x4601 rb=[3..12) symb=[0..14) tbs=816 rv=0 olla=0.00 k2=4 uci: harq_bits=1 csi-1_bits=0 csi-2_present=No mcs=28
+     32 UE PUSCH: ue=0 c-rnti=0x4601 rb=[3..9) symb=[0..14) tbs=544 rv=0 olla=0.00 k2=4 mcs=28
+     24 UE PUSCH: ue=0 c-rnti=0x4601 rb=[3..15) symb=[0..14) tbs=1089 rv=0 olla=0.00 k2=4 uci: harq_bits=1 csi-1_bits=0 csi-2_present=No mcs=28
+     22 UE PUSCH: ue=0 c-rnti=0x4601 rb=[3..13) symb=[0..14) tbs=912 rv=0 olla=0.00 k2=4 uci: harq_bits=1 csi-1_bits=0 csi-2_present=No mcs=28
+     21 UE PUSCH: ue=0 c-rnti=0x4601 rb=[9..76) symb=[0..14) tbs=6147 rv=0 olla=0.00 k2=4 uci: harq_bits=1 csi-1_bits=0 csi-2_present=No mcs=28
+     14 UE PUSCH: ue=0 c-rnti=0x4601 rb=[3..11) symb=[0..14) tbs=736 rv=0 olla=0.00 k2=4 uci: harq_bits=1 csi-1_bits=0 csi-2_present=No mcs=28
+     14 UE PUSCH: ue=0 c-rnti=0x4601 rb=[3..10) symb=[0..14) tbs=640 rv=0 olla=0.00 k2=4 uci: harq_bits=1 csi-1_bits=0 csi-2_present=No mcs=28
+      8 UE PUSCH: ue=0 c-rnti=0x4601 rb=[3..4) symb=[0..14) tbs=92 rv=0 olla=0.00 k2=4 mcs=28
+      5 UE PUSCH: ue=0 c-rnti=0x4601 rb=[3..9) symb=[0..14) tbs=544 rv=0 olla=0.00 k2=4 uci: harq_bits=1 csi-1_bits=4 csi-2_present=No mcs=28
+      5 UE PUSCH: ue=0 c-rnti=0x4601 rb=[3..7) symb=[0..14) tbs=349 rv=0 olla=0.00 k2=4 uci: harq_bits=1 csi-1_bits=4 csi-2_present=No mcs=28
+      5 UE PUSCH: ue=0 c-rnti=0x4601 rb=[3..76) symb=[0..14) tbs=6661 rv=0 olla=0.00 k2=4 uci: harq_bits=0 csi-1_bits=4 csi-2_present=No mcs=28
+      5 UE PUSCH: ue=0 c-rnti=0x4601 rb=[3..19) symb=[0..14) tbs=1473 rv=0 olla=0.00 k2=4 uci: harq_bits=1 csi-1_bits=0 csi-2_present=No mcs=28
+      4 UE PUSCH: ue=0 c-rnti=0x4601 rb=[3..5) symb=[0..14) tbs=177 rv=0 olla=0.00 k2=4 uci: harq_bits=1 csi-1_bits=4 csi-2_present=No mcs=28
+      3 UE PUSCH: ue=0 c-rnti=0x4601 rb=[9..11) symb=[0..14) tbs=177 rv=0 olla=0.00 k2=4 uci: harq_bits=1 csi-1_bits=0 csi-2_present=No mcs=28
+      3 UE PUSCH: ue=0 c-rnti=0x4601 rb=[3..26) symb=[0..14) tbs=2112 rv=0 olla=0.00 k2=4 uci: harq_bits=1 csi-1_bits=0 csi-2_present=No mcs=28
+      3 UE PUSCH: ue=0 c-rnti=0x4601 rb=[3..25) symb=[0..14) tbs=2017 rv=0 olla=0.00 k2=4 uci: harq_bits=1 csi-1_bits=0 csi-2_present=No mcs=28
+      3 UE PUSCH: ue=0 c-rnti=0x4601 rb=[3..18) symb=[0..14) tbs=1377 rv=0 olla=0.00 k2=4 uci: harq_bits=1 csi-1_bits=0 csi-2_present=No mcs=28
+      3 UE PUSCH: ue=0 c-rnti=0x4601 rb=[3..17) symb=[0..14) tbs=1281 rv=0 olla=0.00 k2=4 uci: harq_bits=1 csi-1_bits=0 csi-2_present=No mcs=28
+      2 UE PUSCH: ue=0 c-rnti=0x4601 rb=[9..15) symb=[0..14) tbs=544 rv=0 olla=0.00 k2=4 uci: harq_bits=1 csi-1_bits=0 csi-2_present=No mcs=28
+      2 UE PUSCH: ue=0 c-rnti=0x4601 rb=[9..13) symb=[0..14) tbs=372 rv=0 olla=0.00 k2=4 uci: harq_bits=1 csi-1_bits=0 csi-2_present=No mcs=28
+      2 UE PUSCH: ue=0 c-rnti=0x4601 rb=[3..8) symb=[0..14) tbs=437 rv=0 olla=0.00 k2=4 uci: harq_bits=1 csi-1_bits=4 csi-2_present=No mcs=28
+      2 UE PUSCH: ue=0 c-rnti=0x4601 rb=[3..7) symb=[0..14) tbs=372 rv=0 olla=0.00 k2=4 mcs=28
+      2 UE PUSCH: ue=0 c-rnti=0x4601 rb=[3..25) symb=[0..14) tbs=2017 rv=0 olla=0.00 k2=4 mcs=28
+      2 UE PUSCH: ue=0 c-rnti=0x4601 rb=[3..24) symb=[0..14) tbs=1921 rv=0 olla=0.00 k2=4 uci: harq_bits=1 csi-1_bits=0 csi-2_present=No mcs=28
+      1 UE PUSCH: ue=1024 tc-rnti=0x4601 rb=[3..6) symb=[0..14) tbs=11 rv=0 msg3_delay=6 mcs=28
+      1 UE PUSCH: ue=0 c-rnti=0x4601 rb=[9..76) symb=[0..14) tbs=6147 rv=0 olla=0.00 k2=4 mcs=28
+      1 UE PUSCH: ue=0 c-rnti=0x4601 rb=[9..14) symb=[0..14) tbs=437 rv=0 olla=0.00 k2=4 uci: harq_bits=1 csi-1_bits=0 csi-2_present=No mcs=28
+      1 UE PUSCH: ue=0 c-rnti=0x4601 rb=[3..4) symb=[0..14) tbs=84 rv=0 olla=0.00 k2=4 uci: harq_bits=1 csi-1_bits=4 csi-2_present=No mcs=28
+      1 UE PUSCH: ue=0 c-rnti=0x4601 rb=[3..30) symb=[0..14) tbs=2496 rv=0 olla=0.00 k2=4 uci: harq_bits=1 csi-1_bits=0 csi-2_present=No mcs=28
+      1 UE PUSCH: ue=0 c-rnti=0x4601 rb=[3..25) symb=[0..14) tbs=2017 rv=0 olla=0.00 k2=4 uci: harq_bits=1 csi-1_bits=4 csi-2_present=No mcs=28
+      1 UE PUSCH: ue=0 c-rnti=0x4601 rb=[3..19) symb=[0..14) tbs=1473 rv=0 olla=0.00 k2=4 mcs=28
+      1 UE PUSCH: ue=0 c-rnti=0x4601 rb=[3..16) symb=[0..14) tbs=1185 rv=0 olla=0.00 k2=4 uci: harq_bits=1 csi-1_bits=4 csi-2_present=No mcs=28
+      1 UE PUSCH: ue=0 c-rnti=0x4601 rb=[3..16) symb=[0..14) tbs=1185 rv=0 olla=0.00 k2=4 uci: harq_bits=1 csi-1_bits=0 csi-2_present=No mcs=28
+      1 UE PUSCH: ue=0 c-rnti=0x4601 rb=[3..12) symb=[0..14) tbs=816 rv=0 olla=0.00 k2=4 uci: harq_bits=1 csi-1_bits=4 csi-2_present=No mcs=28
+      1 UE PUSCH: ue=0 c-rnti=0x4601 rb=[3..12) symb=[0..14) tbs=816 rv=0 olla=0.00 k2=4 mcs=28
+      1 UE PUSCH: ue=0 c-rnti=0x4601 rb=[3..11) symb=[0..14) tbs=736 rv=0 olla=0.00 k2=4 uci: harq_bits=1 csi-1_bits=4 csi-2_present=No mcs=28
+      1 UE PUSCH: ue=0 c-rnti=0x4601 rb=[3..10) symb=[0..14) tbs=640 rv=0 olla=0.00 k2=4 uci: harq_bits=1 csi-1_bits=4 csi-2_present=No mcs=28

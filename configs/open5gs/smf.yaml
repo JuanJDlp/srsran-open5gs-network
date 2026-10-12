@@ -1,31 +1,36 @@
+# =====================================================================================================
+# SMF - Session Management Function (TS 23.501 §6.2.2)
+# Crea/modifica/borra las sesiones PDU (la "conexión de datos" del UE): asigna la IP del UE y le dice
+# al UPF, por N4/PFCP, qué hacer con sus paquetes.
+# =====================================================================================================
 logger:
   level: info
 
 smf:
   sbi:
     server:
-      - address: 10.88.1.11
+      - address: 10.88.1.11         # IP del SMF en la red cn; el AMF le pide sesiones aquí (Nsmf_PDUSession)
         port: 7777
     client:
       nrf:
-        - uri: http://10.88.1.10:7777
-  pfcp:
+        - uri: http://10.88.1.10:7777   # se registra en el NRF anunciando qué slice/DNN atiende
+  pfcp:                             # PFCP = protocolo de la interfaz N4 (SMF <-> UPF), UDP 8805 (TS 29.244)
     server:
-      - address: 10.88.1.11         # N4
+      - address: 10.88.1.11         # IP local del SMF para PFCP
     client:
       upf:
-        - address: 10.88.1.3
-  gtpc:
-    server:
+        - address: 10.88.1.3        # UPF que controla este SMF (su IP en la red cn)
+  gtpc:                             # GTP-C: interfaz de 4G (S5/S8-C con el SGW-C). No se usa en 5G SA;
+    server:                         # Open5GS la abre por defecto y la dejamos para no tocar ese comportamiento
       - address: 10.88.1.11
-  gtpu:
-    server:
+  gtpu:                             # GTP-U propio del SMF: Open5GS lo usa para algunos paquetes de plano de
+    server:                         # usuario que el UPF le reenvía (p.ej. IPv6 RA). En nuestra red IPv4: casi sin uso
       - address: 10.88.1.11
-  session:
-    - subnet: 10.99.0.0/16
-      gateway: 10.99.0.1
-      dnn: internet
-  dns:
+  session:                          # pool de IPs para los UEs, por DNN
+    - subnet: 10.99.0.0/16          # los UEs reciben 10.99.x.y (el primero suele ser 10.99.0.2)
+      gateway: 10.99.0.1            # gateway del pool = IP de la interfaz ogstun del UPF
+      dnn: internet                 # DNN (en 4G "APN"): nombre de la red de datos; debe coincidir con UE y suscriptor
+  dns:                              # servidores DNS que se entregan al UE al crear la sesión
     - 8.8.8.8
     - 1.1.1.1
-  mtu: 1400
+  mtu: 1400                         # MTU entregada al UE (< 1500 porque GTP-U añade ~36 bytes de cabeceras)
