@@ -8,11 +8,14 @@
 #   make measure  TBS log + fixed-MCS sweep + bandwidth sweep on the live network (~20 min)
 #   make analysis tables, plots and results/analysis/resumen.md from results/raw/
 #   make split-build|split-up|split-verify|split-down|split-logs   core+gNB on a Raspberry Pi 5, UE here (PI_HOST=pi-cable)
+#   make rf-check RF validation of a real gNB (USRP) with a receive-only HackRF: SSB, PCI, period
+#                 (rf-info, rf-params, rf-sweep, rf-capture, rf-analyze, rf-selftest; GNB_CFG=<gnb.yml>)
 SHELL := /bin/bash
-.PHONY: help build up verify down clean logs ps attach-gnb attach-ue configs capture bler measure analysis split-build split-up split-verify split-down split-logs
+.PHONY: help build up verify down clean logs ps attach-gnb attach-ue configs capture bler measure analysis split-build split-up split-verify split-down split-logs \
+	rf-info rf-params rf-sweep rf-capture rf-analyze rf-check rf-selftest
 
 help:
-	@sed -n "2,10p" Makefile
+	@sed -n "2,13p" Makefile
 
 build:
 	docker compose --profile ran --profile capture build
@@ -59,3 +62,24 @@ analysis:
 
 split-build split-up split-verify split-down split-logs:
 	scripts/split.sh $(@:split-%=%)
+
+rf-info:
+	scripts/rf/rf.sh info
+
+rf-params:
+	scripts/rf/rf.sh params
+
+rf-sweep:
+	scripts/rf/rf.sh sweep
+
+rf-capture:
+	scripts/rf/rf.sh capture
+
+rf-analyze:
+	scripts/rf/rf.sh analyze
+
+rf-check:
+	scripts/rf/rf.sh check
+
+rf-selftest:
+	scripts/rf/rf.sh selftest

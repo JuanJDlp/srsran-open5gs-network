@@ -3,7 +3,11 @@ logs/*
 !logs/.gitkeep
 captures/*
 results/.tmp/
+# HackRF IQ captures (~30 MB/s); reports and plots next to them are kept
+results/rf/**/*.iq
+results/rf/selftest/
 !captures/.gitkeep
 # Real SIM keys / secrets never go to git (Phase 2+)
 secrets/
 *.key
+__pycache__/

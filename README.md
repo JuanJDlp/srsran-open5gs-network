@@ -179,6 +179,29 @@ tablas y figuras en `results/analysis/`.
 | 15 MHz | el DL no mejora (PDSCH limitado a los 48 RB de CORESET#0 con DCI 1_0); el UL sí (52 Mbit/s) |
 | RTT | 29 ms en reposo (0.1 ms es la parte cableada); ~180 ms con el DL saturado (cola del gNB) |
 
+## Validación RF con HackRF One (gNB real con USRP)
+
+Cuando el gNB transmite con una USRP, una HackRF One conectada a este PC actúa como receptor
+independiente para comprobar que la señal sale bien. La HackRF **solo recibe**: es half-duplex y
+no tiene transmisión/recepción temporizada, así que no puede ser el radio del gNB. Corre nativo en
+el host (Docker Desktop no pasa USB): `brew install hackrf` en macOS o `apt install hackrf` en Linux.
+
+> Conexión por cable con 30-60 dB de atenuación entre la salida TX de la USRP y la HackRF, o con
+> antenas dentro de una caja blindada. La entrada de la HackRF admite ~-5 dBm como máximo.
+
+```bash
+make rf-selftest                     # prueba el analizador con una señal NR sintética (sin hardware)
+make rf-info                         # ¿la HackRF está conectada?
+GNB_CFG=/ruta/gnb_usrp.yml make rf-params   # frecuencias que se van a revisar
+GNB_CFG=/ruta/gnb_usrp.yml make rf-sweep    # barrido alrededor de la portadora
+GNB_CFG=/ruta/gnb_usrp.yml SSB_ARFCN=<dl_ssb_arfcn del log del gNB> make rf-check   # captura + análisis
+```
+
+`rf-check` captura 1 s de muestras IQ centradas en la portadora y comprueba: que hay un SSB (PSS),
+el PCI (PSS + SSS) frente al configurado, la frecuencia del SSB y su error en ppm, el periodo de las
+ráfagas SSB, el ancho ocupado y la saturación. Deja `report.md`, `report.json` y las figuras en
+`results/rf/<fecha>/`. Ganancias: `LNA` (0-40), `VGA` (0-62) y `AMP` (0/1, apagado por defecto).
+
 ## Decisiones y problemas resueltos
 
 | Problema | Causa | Solución |
@@ -208,9 +231,11 @@ configs/open5gs/         YAML de cada NF + mongo-init.js (suscriptor)
 configs/gnb, configs/ue  generados con scripts/gen-radio-configs.sh (no editar a mano)
 configs/gnb/gnb_overrides.yml  2.º archivo del gNB (MCS fijo, métricas); measure.sh pone el suyo
 scripts/                 up.sh, verify.sh, split.sh (modo distribuido), capture.sh, down.sh, upf-entrypoint.sh, gen-radio-configs.sh,
+                         rf/rf.sh y rf/rf_analyze.py (validación RF con HackRF),
                          measure.sh (mediciones), analysis/bler.sh y analysis/throughput.py (análisis)
 docs/                    analisis-codificacion.md (MCS, LDPC/Polar) y rendimiento.md (medidas y análisis)
 results/raw/             datos crudos de las mediciones; results/analysis/ CSVs, figuras y resumen.md
+results/rf/              capturas HackRF (los .iq se ignoran) con su report.md y figuras
 captures/ logs/          artefactos de ejecución (ignorados por git)
 ```
 
