@@ -7,4 +7,3 @@ results/.tmp/
 # Real SIM keys / secrets never go to git (Phase 2+)
 secrets/
 *.key
-.env

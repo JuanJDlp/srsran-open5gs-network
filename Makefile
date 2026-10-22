@@ -7,11 +7,12 @@
 #   make bler     link-level BLER vs SNR (LDPC/Polar) with srsRAN's PHY (offline, ~3 min)
 #   make measure  TBS log + fixed-MCS sweep + bandwidth sweep on the live network (~20 min)
 #   make analysis tables, plots and results/analysis/resumen.md from results/raw/
+#   make split-build|split-up|split-verify|split-down|split-logs   core+gNB on a Raspberry Pi 5, UE here (PI_HOST=pi-cable)
 SHELL := /bin/bash
-.PHONY: help build up verify down clean logs ps attach-gnb attach-ue configs capture bler measure analysis
+.PHONY: help build up verify down clean logs ps attach-gnb attach-ue configs capture bler measure analysis split-build split-up split-verify split-down split-logs
 
 help:
-	@sed -n "2,9p" Makefile
+	@sed -n "2,10p" Makefile
 
 build:
 	docker compose --profile ran --profile capture build
@@ -55,3 +56,6 @@ measure:
 
 analysis:
 	python3 scripts/analysis/throughput.py
+
+split-build split-up split-verify split-down split-logs:
+	scripts/split.sh $(@:split-%=%)

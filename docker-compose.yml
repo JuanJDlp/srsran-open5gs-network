@@ -14,7 +14,8 @@
 # =====================================================================================================
 
 x-open5gs: &open5gs                 # plantilla YAML reutilizada por todas las NFs de Open5GS ("ancla")
-  image: gradiant/open5gs:${OPEN5GS_VERSION}   # imagen comunitaria con todos los binarios open5gs-*d
+  image: ${OPEN5GS_IMAGE:-gradiant/open5gs}:${OPEN5GS_VERSION}   # imagen con todos los binarios open5gs-*d (gradiant en x86;
+                                    # en la Raspberry Pi, siscom/open5gs compilada de images/open5gs)
   restart: unless-stopped           # si una NF se cae, Docker la reinicia
   cpuset: ${CORE_CPUS}              # núcleos de CPU del core (separados de la radio, ver .env)
 
@@ -40,7 +41,7 @@ services:
       cn: { ipv4_address: 10.88.1.5 }   # no se publica al host: nadie fuera de Docker puede tocar la BD
 
   webui:                            # interfaz web de Open5GS para ver/editar suscriptores
-    image: gradiant/open5gs-webui:${OPEN5GS_VERSION}
+    image: ${OPEN5GS_WEBUI_IMAGE:-gradiant/open5gs-webui}:${OPEN5GS_VERSION}   # en la Pi: siscom/open5gs-webui
     container_name: webui
     restart: unless-stopped
     cpuset: ${CORE_CPUS}

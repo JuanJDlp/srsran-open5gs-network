@@ -1,0 +1,23 @@
+# =====================================================================================================
+# Despliegue DISTRIBUIDO, lado Raspberry Pi 5: core Open5GS + gNB. El UE corre en el PC.
+# Se usa ENCIMA de docker-compose.yml (Compose fusiona ambos archivos; aquí solo va lo que cambia):
+#   docker compose -f docker-compose.yml -f docker-compose.split-pi.yml ...   (lo hace scripts/split.sh)
+# La "radio" ZMQ sale del contenedor del gNB y cruza el cable Ethernet hasta el UE del PC.
+# Variables: PI_IP y PC_IP (IPs de cada equipo en el cable) las calcula scripts/split.sh;
+# imágenes ARM64 y reparto de CPU vienen de split-pi.env.
+# =====================================================================================================
+
+services:
+  webui:
+    ports:
+      - "${PI_IP}:3000:9999"        # además de 127.0.0.1: WebUI visible desde el PC en http://<PI_IP>:3000
+
+  gnb:
+    ports:
+      - "${PI_IP}:2000:2000"        # ZMQ TX del gNB (muestras de bajada): el UE del PC se conecta aquí por el cable
+    # Mismo arranque que en docker-compose.yml, pero con device_args reemplazado por línea de comandos:
+    #   tx_port: el gNB sigue publicando la bajada en su IP de la red air (Docker la expone en PI_IP:2000)
+    #   rx_port: la subida ya no está en 10.88.3.21 sino en el PC (PC_IP:2001, publicado por el contenedor ue)
+    #   base_srate: 11.52 Msps, perfil de 10 MHz (el único soportado en modo distribuido)
+    command: ["-c", "/configs/gnb.yml", "-c", "/configs/gnb_overrides.yml",
+              "ru_sdr", "--device_args=tx_port=tcp://10.88.3.20:2000,rx_port=tcp://${PC_IP}:2001,base_srate=11.52e6"]

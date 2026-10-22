@@ -8,6 +8,9 @@ Red 5G Standalone completa en un solo PC y **toda en contenedores**:
 - **Radio simulada con ZeroMQ**: gNB y UE intercambian muestras IQ por TCP. Toda la pila NR se ejecuta
   de verdad: PHY con LDPC/Polar, MAC, RLC, PDCP, RRC y NAS.
 
+También puede repartirse en dos equipos: core y gNB en una Raspberry Pi 5 y el UE en el PC
+(ver [Modo distribuido](#modo-distribuido-core-y-gnb-en-una-raspberry-pi-5-ue-en-el-pc)).
+
 No se instala nada en el host aparte de Docker, ni se tocan sus rutas, `iptables` ni `sysctl`.
 
 Todos los archivos de configuración (`configs/`, `docker-compose.yml`, `.env`) llevan un comentario
@@ -71,6 +74,67 @@ Otros comandos:
 - **Tráfico desde el UE:** `docker exec ue ping 10.88.4.10`,
   `docker exec ue iperf3 -c 10.88.4.10 [-R] [-u -b 10M]` o `docker exec ue ping 8.8.8.8` (Internet).
 
+## Modo distribuido: core y gNB en una Raspberry Pi 5, UE en el PC
+
+La misma red repartida en dos equipos unidos por un cable Ethernet. En la Pi corren los 13 contenedores
+del core y el gNB; en el PC solo el UE. Lo que cruza el cable es la "radio": las muestras IQ que gNB y
+UE se pasan por ZMQ. N2, N3, N4 y el SBI se quedan dentro de la Pi. Así se ve que el UE llega al core y
+a Internet aunque esté en otra máquina.
+
+```
+ PC (x86, 10.42.0.1)                      cable Ethernet               Raspberry Pi 5 (ARM64, 10.42.0.28)
+ ┌──────────────┐  UL: UE publica en 10.42.0.1:2001  ──────────────▶  ┌─────┐ N2/N3 ┌──────────────────┐
+ │ ue (srsUE)   │                                                     │ gnb │──────▶│ core Open5GS (13)│──▶ Internet
+ └──────────────┘  ◀──────────────  DL: gNB publica en 10.42.0.28:2000 └─────┘       └──────────────────┘   (vía el PC)
+```
+
+Requisitos adicionales:
+
+- Raspberry Pi 5 con Raspberry Pi OS 64 bits (probado: Debian 12, kernel 6.6, 8 GB) y Docker con Compose v2.
+- SSH sin contraseña desde el PC hacia la Pi con un alias en `~/.ssh/config` (por defecto `pi-cable`;
+  otro alias con `PI_HOST=<alias> make split-up`). Las IP de cada lado se sacan de ese alias.
+- La Pi necesita salir a Internet para compilar (en nuestro caso, por el mismo cable, con la conexión
+  compartida del PC).
+
+```bash
+make split-build    # copia el repo a la Pi y compila allá las imágenes ARM64 (~1 h la 1.ª vez)
+make split-up       # core (Pi) -> gNB (Pi) -> UE (PC); espera la sesión PDU
+make split-verify   # las mismas 29 comprobaciones contra los dos equipos + ping a 8.8.8.8 desde el UE
+make split-logs     # últimas líneas de amf/smf/upf/gnb (Pi) y ue (PC)
+make split-down     # apaga los dos lados (conserva la base de suscriptores en la Pi)
+```
+
+Para mostrarlo paso a paso con comandos manuales (qué correr en la Pi y qué en el PC), ver
+[`DEMO-DISTRIBUIDO.md`](DEMO-DISTRIBUIDO.md).
+
+Qué cambia respecto al modo de un solo PC:
+
+- `gradiant/open5gs` solo existe para x86, así que en la Pi se compilan Open5GS y su WebUI desde el
+  código, en el mismo tag v2.7.7 (`images/open5gs`, `images/open5gs-webui`). El gNB es la misma imagen
+  de siempre compilada en la Pi, con `MARCH=armv8.2-a+dotprod+fp16` (Cortex-A76).
+- `docker-compose.split-pi.yml` y `docker-compose.split-pc.yml` se cargan encima de `docker-compose.yml`
+  y solo cambian los `device_args` de ZMQ (por línea de comandos) y publican los puertos 2000/2001 en
+  el cable. `split-pi.env` elige las imágenes ARM64 y reparte los 4 núcleos de la Pi (core 0-1, gNB 2-3).
+- Solo el perfil de 10 MHz (11.52 Msps, la tasa más baja que acepta srsUE).
+- WebUI en `http://10.42.0.28:3000` desde el PC.
+
+Resultados (2026-10-22, PC con adaptador USB RTL8152 de **100 Mbit/s**):
+
+| Prueba | Resultado |
+|---|---|
+| `make split-up && make split-verify` | 29/29 + ping a 8.8.8.8 desde el UE (0 % de pérdida) |
+| Tráfico ZMQ en el cable, en reposo | ~86 Mbit/s en cada sentido (el enlace va lleno) |
+| ping UE → DN, 20 paquetes | 0 % de pérdida, RTT 103 / 174 / 339 ms (mín / medio / máx) |
+| ping UE → 8.8.8.8 | 0 % de pérdida, ~280 ms |
+| iperf3 TCP DL / UL | 2.68 / 2.76 Mbit/s |
+| CPU del gNB en la Pi | ~1.2 núcleos |
+
+ZMQ no tiene reloj propio: gNB y UE avanzan al ritmo al que llegan las muestras. A 10 MHz necesitan
+11.52 Msps × 8 bytes ≈ 737 Mbit/s por sentido y el cable da ~86, así que la radio simulada corre unas
+8.6 veces más lenta que el tiempo real. Por eso el throughput cae unas 10 veces y la latencia sube, pero
+los temporizadores de registro alcanzan y todo el plano de control y de usuario funciona. Con un
+adaptador gigabit (USB 3) el enlace dejaría de ser el cuello de botella.
+
 ## Parámetros de la red
 
 Deben coincidir en todos los componentes; `make verify` comprueba su coherencia en el nivel V0.
@@ -127,18 +191,23 @@ tablas y figuras en `results/analysis/`.
 | `[channel.dl.awgn]` de srsUE no añade ruido en 5G SA | El emulador de canal solo está conectado en la ruta LTE (`sync.cc`, no `sync_sa.cc`) | El canal se estudia offline con `make bler` (imagen `phy-sim`) |
 | `polar_chain_test` aborta (`double free`) con E < N | Bug de la prueba upstream: recorre `BATCH_SIZE*N` LLR en un buffer de `BATCH_SIZE*E` | Parche con `sed` en `images/phy-sim/Dockerfile` |
 | La WebUI no permitía iniciar sesión | En producción no crea `admin`, y un hash sembrado a mano no es PBKDF2 válido | `up.sh` crea el admin con `Account.register` de la propia WebUI |
+| En la Pi, `gradiant/open5gs` no arranca | La imagen solo se publica para amd64 | `images/open5gs` y `images/open5gs-webui` compilan v2.7.7 en ARM64 |
+| gNB en ARM64: `unknown value 'native+crypto' for '-march'` | En aarch64 el CMake de srsRAN añade `+crypto` a `MARCH` | `MARCH=armv8.2-a+dotprod+fp16` en `scripts/split.sh` |
+| `split-verify`: `kex_exchange_identification: Connection reset by peer` | `docker compose ps` remoto abre una sesión SSH por contenedor y supera `MaxStartups` de la Pi | Contar contenedores con un solo `docker ps` en `verify.sh` |
 | 5G-AKA fallaba con HTTP 500 | Campos numéricos del suscriptor guardados como `double` | `NumberInt`/`NumberLong` en `configs/open5gs/mongo-init.js` |
 
 ## Estructura
 
 ```
 docker-compose.yml       servicios, redes y volúmenes (gnb/ue en el perfil "ran", tools en "capture")
+docker-compose.split-*.yml, split-pi.env   modo distribuido (core+gNB en la Pi, UE en el PC)
 .env                     versiones, ancho de banda y reparto de CPU
-images/                  Dockerfiles: gnb, srsue, dn (iperf3), tools (tcpdump/tshark), phy-sim (BLER/Polar)
+images/                  Dockerfiles: gnb, srsue, dn (iperf3), tools (tcpdump/tshark), phy-sim (BLER/Polar),
+                         open5gs y open5gs-webui (ARM64, para la Pi)
 configs/open5gs/         YAML de cada NF + mongo-init.js (suscriptor)
 configs/gnb, configs/ue  generados con scripts/gen-radio-configs.sh (no editar a mano)
 configs/gnb/gnb_overrides.yml  2.º archivo del gNB (MCS fijo, métricas); measure.sh pone el suyo
-scripts/                 up.sh, verify.sh, capture.sh, down.sh, upf-entrypoint.sh, gen-radio-configs.sh,
+scripts/                 up.sh, verify.sh, split.sh (modo distribuido), capture.sh, down.sh, upf-entrypoint.sh, gen-radio-configs.sh,
                          measure.sh (mediciones), analysis/bler.sh y analysis/throughput.py (análisis)
 docs/                    analisis-codificacion.md (MCS, LDPC/Polar) y rendimiento.md (medidas y análisis)
 results/raw/             datos crudos de las mediciones; results/analysis/ CSVs, figuras y resumen.md

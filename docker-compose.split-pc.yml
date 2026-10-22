@@ -1,0 +1,17 @@
+# =====================================================================================================
+# Despliegue DISTRIBUIDO, lado PC: solo el UE (srsUE). El core y el gNB corren en la Raspberry Pi.
+# Se usa ENCIMA de docker-compose.yml:
+#   docker compose -f docker-compose.yml -f docker-compose.split-pc.yml --profile ran up -d ue
+# (lo hace scripts/split.sh). PI_IP y PC_IP los calcula el script a partir del alias SSH de la Pi.
+# =====================================================================================================
+
+services:
+  ue:
+    ports:
+      - "${PC_IP}:2001:2001"        # ZMQ TX del UE (muestras de subida): el gNB de la Pi se conecta aquí por el cable
+    # Mismo arranque que en docker-compose.yml, con device_args reemplazado por línea de comandos:
+    #   tx_port: el UE publica la subida en su IP de la red air (Docker la expone en PC_IP:2001)
+    #   rx_port: la bajada ya no está en 10.88.3.20 sino en la Pi (PI_IP:2000, publicado por el gNB)
+    #   base_srate: 11.52 Msps, igual que el gNB (perfil de 10 MHz)
+    command: ["/configs/ue.conf",
+              "--rf.device_args=tx_port=tcp://10.88.3.21:2001,rx_port=tcp://${PI_IP}:2000,base_srate=11.52e6"]

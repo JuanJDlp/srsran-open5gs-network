@@ -23,12 +23,7 @@ wait_log smf 'PFCP associated \[10\.88\.1\.3\]' 30 || die "SMF did not associate
 ok "13 containers running, NGAP listening, PFCP (N4) associated"
 
 step "WebUI admin account"
-docker exec webui node -e "
-const m=require('mongoose');const A=require('./server/models/account');
-(async()=>{await m.connect(process.env.DB_URI);
- if(!(await A.countDocuments({username:'admin'}))){await A.register(new A({username:'admin',roles:['admin']}),'1423');}
- process.exit(0);})().catch(e=>{console.error(e);process.exit(1);});" >/dev/null 2>&1 \
-  && ok "http://127.0.0.1:3000  (admin / 1423)" || warn "could not ensure WebUI admin"
+webui_admin && ok "http://127.0.0.1:3000  (admin / 1423)" || warn "could not ensure WebUI admin"
 
 step "gNB (srsRAN Project) - restarting gNB and UE together (ZMQ needs both sides fresh)"
 dc rm -sf ue gnb >/dev/null 2>&1 || true

@@ -23,18 +23,21 @@ gnb_srate=$(grep -E '^ *srate:' "$GNB_CFG" | awk '{print $2}')
 check "gNB/UE sample rate match (${gnb_srate} MHz)" same "${gnb_srate}e6" "$(ue_cfg_val srate)"
 
 step "V1 - core"
-running=$(docker compose ps --status running -q | wc -l)
+# One `docker ps` (not `compose ps`, which opens one SSH session per container in split mode).
+project=$(basename "$ROOT" | tr '[:upper:]' '[:lower:]')
+running=$(cdocker ps --filter "label=com.docker.compose.project=$project" --filter status=running \
+  --format '{{.Label "com.docker.compose.service"}}' | grep -cvE '^(gnb|ue|tools)$' || true)
 check "13 core containers running ($running)" test "$running" -ge 13
-check "NRF healthy" bash -c "[[ \$(docker inspect -f '{{.State.Health.Status}}' nrf) == healthy ]]"
+check "NRF healthy" bash -c "[[ \$(cdocker inspect -f '{{.State.Health.Status}}' nrf) == healthy ]]"
 for nf in amf smf ausf udm udr pcf nssf bsf; do
   check "$nf registered in NRF" has_log "$nf" 'NF registered'
 done
 check "N4: SMF-UPF PFCP association" has_log smf 'PFCP associated \[10\.88\.1\.3\]'
 
 step "V2 - N2 (NGAP over SCTP)"
-check "gnb container running" bash -c "[[ \$(docker inspect -f '{{.State.Running}}' gnb) == true ]]"
+check "gnb container running" bash -c "[[ \$(cdocker inspect -f '{{.State.Running}}' gnb) == true ]]"
 # Only AMF log lines written after the current gNB started count (older runs leave stale lines).
-gnb_start=$(docker inspect -f '{{.State.StartedAt}}' gnb 2>/dev/null || echo "")
+gnb_start=$(cdocker inspect -f '{{.State.StartedAt}}' gnb 2>/dev/null || echo "")
 amf_since() { SINCE="$gnb_start" clog amf | grep -E "$1" >/dev/null; }
 check "AMF accepted gNB 10.88.2.20 (current run)" amf_since 'gNB-N2 accepted\[10\.88\.2\.20\]'
 
@@ -52,8 +55,8 @@ step "V5 - user plane through the 5G network (UE -> gNB -> GTP-U -> UPF -> N6)"
 check "UE route to DN goes via tun_srsue" bash -c "docker exec ue ip route get 10.88.4.10 | grep -q 'dev tun_srsue'"
 check "ping UE -> UPF gateway 10.99.0.1" docker exec ue ping -c 3 -W 3 -I tun_srsue 10.99.0.1
 check "ping UE -> DN 10.88.4.10" docker exec ue ping -c 3 -W 3 -I tun_srsue 10.88.4.10
-check "DN sees the UE IP (no NAT inside the lab)" bash -c "docker exec dn ping -c 2 -W 3 '${ue_ip:-0.0.0.0}'"
-check "GTP-U counters grew on the UPF (packets crossed N3)" bash -c "docker exec upf cat /proc/net/dev | awk '/ogstun/ {exit !(\$3 > 0)}'"
+check "DN sees the UE IP (no NAT inside the lab)" bash -c "cdocker exec dn ping -c 2 -W 3 '${ue_ip:-0.0.0.0}'"
+check "GTP-U counters grew on the UPF (packets crossed N3)" bash -c "cdocker exec upf cat /proc/net/dev | awk '/ogstun/ {exit !(\$3 > 0)}'"
 
 echo
 if [[ "$fail" -eq 0 ]]; then

@@ -23,8 +23,25 @@ die()  { bad "$*"; exit 1; }
 
 dc() { docker compose --profile ran "$@"; }
 
+# Docker for core/gNB containers. Split deployment (scripts/split.sh) sets CORE_HOST=<ssh alias>
+# so they are reached on the remote engine; the UE always runs on this machine.
+cdocker() { if [[ -n "${CORE_HOST:-}" ]]; then DOCKER_HOST="ssh://$CORE_HOST" docker "$@"; else docker "$@"; fi; }
+export -f cdocker   # verify.sh runs some checks in "bash -c" subshells
+
 # Container logs without ANSI colors. Set SINCE=<timestamp> to only read newer lines.
-clog() { docker logs ${SINCE:+--since "$SINCE"} "$1" 2>&1 | sed -r 's/\x1B\[[0-9;?]*[a-zA-Z]//g; s/\r//g'; }
+clog() {
+  local d=cdocker; [[ "$1" == ue ]] && d=docker
+  $d logs ${SINCE:+--since "$SINCE"} "$1" 2>&1 | sed -r 's/\x1B\[[0-9;?]*[a-zA-Z]//g; s/\r//g'
+}
+
+# Creates the WebUI admin account (admin / 1423) if it does not exist yet.
+webui_admin() {
+  cdocker exec webui node -e "
+const m=require('mongoose');const A=require('./server/models/account');
+(async()=>{await m.connect(process.env.DB_URI);
+ if(!(await A.countDocuments({username:'admin'}))){await A.register(new A({username:'admin',roles:['admin']}),'1423');}
+ process.exit(0);})().catch(e=>{console.error(e);process.exit(1);});" >/dev/null 2>&1
+}
 
 # Runs a command quietly; on failure prints its output and exits.
 quiet() { local out; out=$("$@" 2>&1) || { echo "$out" | tail -5; die "command failed: $*"; }; }
