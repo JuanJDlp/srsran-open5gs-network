@@ -30,7 +30,7 @@ ru_sdr:                             # "Radio Unit" por SDR: una USRP B200/B210 r
   sync: internal                    # señal PPS interna (no hay que sincronizar con otra radio)
   srate: 11.52                      # tasa de muestreo en MHz (11.52 Msps alcanza para 52 PRB = 10 MHz)
   otw_format: sc12                  # muestras de 12 bits por el USB (menos ancho de banda que sc16, mismo resultado)
-  tx_gain: 60                      # ganancia TX en dB (B210: 0-89.75). 60 ~ -20 dBm a 1.8 GHz; subir con
+  tx_gain: 89.75                      # ganancia TX en dB (B210: 0-89.75). 60 ~ -20 dBm a 1.8 GHz; subir con
                                     # antenas y teléfono lejos, bajar si va por cable (siempre con atenuadores)
   rx_gain: 40                      # ganancia RX en dB (B210: 0-76); muy alta satura con el UE cerca
 

@@ -6,6 +6,7 @@
 # Usage: ./usrp-start.sh                 10 MHz (BW_MHZ from .env)
 #        BW=20 ./usrp-start.sh           other bandwidth profile (10|15|20)
 #        ALLOW_USB2=1 ./usrp-start.sh    run even if the USRP is on USB 2 (expect underflows)
+#        USRP_TX_GAIN=89.75 ./usrp-start.sh   TX gain in dB (B200/B210 max 89.75 ~ +10 dBm; default 60)
 source "$(dirname "$0")/scripts/lib.sh"
 
 IMG=siscom/gnb-uhd:24.10.1
@@ -29,6 +30,11 @@ docker info >/dev/null 2>&1 || die "Docker is not running (sudo systemctl start 
 if ! docker image inspect "$IMG" >/dev/null 2>&1; then
   warn "image $IMG not found: building it now (~10-15 min, only the first time)"
   docker compose --profile usrp build gnb-usrp || die "image build failed"
+fi
+if [[ -n "${USRP_TX_GAIN:-}${USRP_RX_GAIN:-}" ]]; then
+  # Gains are baked into the generated configs: regenerate with the requested values.
+  quiet scripts/gen-radio-configs.sh
+  ok "configs regenerated with TX gain ${USRP_TX_GAIN:-60} dB, RX gain ${USRP_RX_GAIN:-40} dB"
 fi
 [[ -f "$CFG" ]] || { warn "missing $CFG: generating radio configs"; quiet scripts/gen-radio-configs.sh; }
 ok "Docker OK, image $IMG, config $CFG"
