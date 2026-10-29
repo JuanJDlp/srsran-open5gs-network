@@ -7,7 +7,27 @@
 # ssb_nr_arfcn: value printed by the gNB as dl_ssb_arfcn (368410 for 10, 15 and 20 MHz, verified).
 set -euo pipefail
 LOG_LEVEL="${LOG_LEVEL:-warning}"   # gNB/UE file log level (info or debug for troubleshooting)
+USRP_TX_GAIN="${USRP_TX_GAIN:-60}"  # USRP gains (dB). B210 TX 0-89.75: 60 ~ -20 dBm, enough for a nearby phone
+USRP_RX_GAIN="${USRP_RX_GAIN:-40}"  # B210 RX 0-76
 cd "$(dirname "$0")/../configs"
+
+# ru_sdr block of gnb_usrp_<bw>mhz.yml (real USRP B200/B210 over USB 3 instead of ZMQ).
+usrp_block() {
+cat <<EOF
+ru_sdr:                             # "Radio Unit" por SDR: una USRP B200/B210 real conectada por USB 3
+  device_driver: uhd                # driver UHD de Ettus (imagen siscom/gnb-uhd, compilada con ENABLE_UHD=ON)
+  device_args: type=b200,num_recv_frames=64,num_send_frames=64
+                                    # type=b200: busca una B200 o B210 (UHD usa el mismo tipo para ambas)
+                                    # num_*_frames: más buffers USB para evitar overflows (O) y underflows (U)
+  clock: internal                   # referencia de 10 MHz: oscilador interno de la USRP (sin GPSDO ni reloj externo)
+  sync: internal                    # señal PPS interna (no hay que sincronizar con otra radio)
+  srate: ${1}                      # tasa de muestreo en MHz (${1} Msps alcanza para ${2} PRB = ${3} MHz)
+  otw_format: sc12                  # muestras de 12 bits por el USB (menos ancho de banda que sc16, mismo resultado)
+  tx_gain: ${USRP_TX_GAIN}                      # ganancia TX en dB (B210: 0-89.75). 60 ~ -20 dBm a 1.8 GHz; subir con
+                                    # antenas y teléfono lejos, bajar si va por cable (siempre con atenuadores)
+  rx_gain: ${USRP_RX_GAIN}                      # ganancia RX en dB (B210: 0-76); muy alta satura con el UE cerca
+EOF
+}
 while read -r bw sr prb ssb cs0; do
 cat > "gnb/gnb_zmq_${bw}mhz.yml" <<EOF
 # =====================================================================================================
@@ -79,6 +99,12 @@ pcap:                               # capturas generadas por el propio gNB (mont
   ngap_enable: true                 # NGAP (N2) tal como lo ve el gNB
   ngap_filename: /captures/gnb_ngap.pcap
 EOF
+# Same cell, real radio: copy the ZMQ gNB config replacing the header line and the ru_sdr block.
+awk -v blk="$(usrp_block "$sr" "$prb" "$bw")" '
+  /radio por ZMQ\.$/ { sub(/radio por ZMQ\./, "radio USRP B200/B210 (UHD).") }
+  /^ru_sdr:/ { print blk; print ""; skip = 1; next }
+  skip && /^[a-z_]+:/ { skip = 0 }
+  !skip' "gnb/gnb_zmq_${bw}mhz.yml" > "gnb/gnb_usrp_${bw}mhz.yml"
 cat > "ue/ue_zmq_${bw}mhz.conf" <<EOF
 # =====================================================================================================
 # srsUE (srsRAN 4G release_25_10) como UE 5G SA, banda n3, ${bw} MHz (${prb} PRB), radio por ZMQ.

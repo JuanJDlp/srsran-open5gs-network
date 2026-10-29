@@ -10,12 +10,14 @@
 #   make split-build|split-up|split-verify|split-down|split-logs   core+gNB on a Raspberry Pi 5, UE here (PI_HOST=pi-cable)
 #   make rf-check RF validation of a real gNB (USRP) with a receive-only HackRF: SSB, PCI, period
 #                 (rf-info, rf-params, rf-sweep, rf-capture, rf-analyze, rf-selftest; GNB_CFG=<gnb.yml>)
+#   make usrp-build|usrp-probe|usrp-up|usrp-logs|usrp-down   core + gNB on a real USRP B200/B210 (no UE)
 SHELL := /bin/bash
 .PHONY: help build up verify down clean logs ps attach-gnb attach-ue configs capture bler measure analysis split-build split-up split-verify split-down split-logs \
-	rf-info rf-params rf-sweep rf-capture rf-analyze rf-check rf-selftest
+	rf-info rf-params rf-sweep rf-capture rf-analyze rf-check rf-selftest \
+	usrp-build usrp-probe usrp-up usrp-logs usrp-down
 
 help:
-	@sed -n "2,13p" Makefile
+	@sed -n "2,14p" Makefile
 
 build:
 	docker compose --profile ran --profile capture build
@@ -83,3 +85,18 @@ rf-check:
 
 rf-selftest:
 	scripts/rf/rf.sh selftest
+
+usrp-build:
+	docker compose --profile usrp build gnb-usrp
+
+usrp-probe:
+	scripts/usrp.sh probe
+
+usrp-up:
+	./usrp-start.sh
+
+usrp-logs:
+	scripts/usrp.sh logs
+
+usrp-down:
+	./usrp-stop.sh

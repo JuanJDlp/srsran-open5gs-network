@@ -195,6 +195,31 @@ services:
       ran: { ipv4_address: 10.88.2.20 }  # N2 y N3
       air: { ipv4_address: 10.88.3.20 }  # radio simulada (ZMQ)
 
+  gnb-usrp:                         # el mismo gNB, pero con radio real: USRP B200/B210 por USB (driver UHD)
+    image: siscom/gnb-uhd:24.10.1
+    build: ./images/gnb-uhd         # srsRAN release_24_10_1 compilado con UHD + imágenes FPGA/firmware de la B2xx
+    container_name: gnb-usrp
+    profiles: ["usrp"]              # lo arranca scripts/usrp.sh (`make usrp-up`); excluye al gnb ZMQ (misma IP)
+    stdin_open: true                # srsRAN necesita TTY o la celda no arranca
+    tty: true                       # consola: `docker attach gnb-usrp`, tecla t = métricas
+    cpuset: ${GNB_CPUS}             # núcleos reservados para la radio
+    cap_add: [SYS_NICE]             # prioridad de tiempo real para los hilos de radio
+    ulimits:
+      rtprio: 99                    # permite a srsRAN/UHD pedir prioridad de tiempo real máxima
+      memlock: -1                   # permite fijar buffers en RAM (UHD lo intenta para el USB)
+    volumes:
+      - /dev/bus/usb:/dev/bus/usb   # TODO el árbol USB: la B2xx cambia de número al cargar su firmware
+                                    # (bootloader en USB 2 -> firmware en USB 3), así que no sirve pasar un solo dispositivo
+      - ./configs/gnb/gnb_usrp_${BW_MHZ}mhz.yml:/configs/gnb.yml:ro   # perfil de ancho de banda elegido
+      - ${GNB_OVERRIDES}:/configs/gnb_overrides.yml:ro   # mismos ajustes extra que el gNB ZMQ
+      - ./logs:/logs                # logs/gnb.log
+      - ./captures:/captures        # pcaps MAC y NGAP del gNB
+    device_cgroup_rules:
+      - "c 189:* rmw"               # permiso para cualquier dispositivo USB (major 189), sin usar --privileged
+    command: ["-c", "/configs/gnb.yml", "-c", "/configs/gnb_overrides.yml"]
+    networks:
+      ran: { ipv4_address: 10.88.2.20 }  # N2 y N3: misma IP que el gNB ZMQ, así amf.yaml/upf.yaml no cambian
+
   ue:                               # teléfono 5G simulado (srsUE)
     image: siscom/srsue:25.10
     build: ./images/srsue           # se compila desde el código fuente (srsRAN 4G release_25_10, con ZMQ)

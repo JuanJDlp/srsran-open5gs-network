@@ -202,6 +202,29 @@ el PCI (PSS + SSS) frente al configurado, la frecuencia del SSB y su error en pp
 ráfagas SSB, el ancho ocupado y la saturación. Deja `report.md`, `report.json` y las figuras en
 `results/rf/<fecha>/`. Ganancias: `LNA` (0-40), `VGA` (0-62) y `AMP` (0/1, apagado por defecto).
 
+## gNB con radio real: USRP B200/B210 (solo core + gNB)
+
+El mismo gNB (srsRAN 24.10.1) puede transmitir con una USRP B200/B210 conectada por USB 3 en vez de ZMQ.
+La celda es idéntica (n3, 1842.5 MHz DL / 1747.5 MHz UL, PLMN 00101, TAC 7, PCI 1); solo cambia el bloque
+`ru_sdr` de `configs/gnb/gnb_usrp_<BW>mhz.yml` (generado por `scripts/gen-radio-configs.sh`).
+
+```bash
+make usrp-build    # imagen siscom/gnb-uhd:24.10.1 (UHD 4.1 + firmware/FPGA de la B2xx), ~10 min
+make usrp-probe    # detecta la USRP desde el contenedor: debe decir "Operating over USB 3"
+./usrp-start.sh    # detecta la USRP, exige USB 3, (construye la imagen si falta), core -> gNB, 20 s de estabilidad
+                   # (BW=10|15|20; ALLOW_USB2=1 para forzar USB 2). Equivale a make usrp-up
+make usrp-logs     # últimas líneas del gNB;  docker attach gnb-usrp (t = métricas)
+./usrp-stop.sh     # apaga el gNB (deja de transmitir); el core sigue. --all apaga también el core
+```
+
+- Ganancias por defecto: TX 60 dB (~ -20 dBm), RX 40 dB. Cambiarlas con
+  `USRP_TX_GAIN=.. USRP_RX_GAIN=.. scripts/gen-radio-configs.sh`.
+- El contenedor recibe todo `/dev/bus/usb` (la B2xx se re-enumera de USB 2 a USB 3 al cargar el firmware).
+- Algún `Underflow: 1` esporádico en consola es normal con el gobernador de CPU en `powersave`;
+  con `performance` desaparecen casi del todo.
+- Verificado 2026-10-29 con una B200 (USB 3): NG Setup aceptado, `==== gNB started ===`, Late 0 / Overflow 0,
+  ~1 underflow cada 10-15 s, gNB ~1.3 núcleos y 2.2 GiB.
+
 ## Decisiones y problemas resueltos
 
 | Problema | Causa | Solución |
