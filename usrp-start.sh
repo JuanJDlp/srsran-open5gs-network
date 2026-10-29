@@ -6,7 +6,7 @@
 # Usage: ./usrp-start.sh                 10 MHz (BW_MHZ from .env)
 #        BW=20 ./usrp-start.sh           other bandwidth profile (10|15|20)
 #        ALLOW_USB2=1 ./usrp-start.sh    run even if the USRP is on USB 2 (expect underflows)
-#        USRP_TX_GAIN=89.75 ./usrp-start.sh   TX gain in dB (B200/B210 max 89.75 ~ +10 dBm; default 60)
+#        USRP_TX_GAIN=89.75 ./usrp-start.sh   TX gain in dB (B200/B210 max 89.75 ~ +10 dBm; default 80 ~ 0 dBm)
 source "$(dirname "$0")/scripts/lib.sh"
 
 IMG=siscom/gnb-uhd:24.10.1
@@ -34,7 +34,7 @@ fi
 if [[ -n "${USRP_TX_GAIN:-}${USRP_RX_GAIN:-}" ]]; then
   # Gains are baked into the generated configs: regenerate with the requested values.
   quiet scripts/gen-radio-configs.sh
-  ok "configs regenerated with TX gain ${USRP_TX_GAIN:-60} dB, RX gain ${USRP_RX_GAIN:-40} dB"
+  ok "configs regenerated with TX gain ${USRP_TX_GAIN:-80} dB, RX gain ${USRP_RX_GAIN:-40} dB"
 fi
 [[ -f "$CFG" ]] || { warn "missing $CFG: generating radio configs"; quiet scripts/gen-radio-configs.sh; }
 ok "Docker OK, image $IMG, config $CFG"

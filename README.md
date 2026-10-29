@@ -217,8 +217,9 @@ make usrp-logs     # últimas líneas del gNB;  docker attach gnb-usrp (t = mét
 ./usrp-stop.sh     # apaga el gNB (deja de transmitir); el core sigue. --all apaga también el core
 ```
 
-- Ganancias por defecto: TX 60 dB (~ -20 dBm), RX 40 dB. Cambiarlas con
-  `USRP_TX_GAIN=.. USRP_RX_GAIN=.. scripts/gen-radio-configs.sh`.
+- Ganancias por defecto: TX 80 dB (~ 0 dBm), RX 40 dB. Por aire una HackRF a pocos cm recibe <= -12 dBm
+  (su máximo es -5 dBm); por cable siempre con 30-60 dB de atenuadores. Cambiarlas al arrancar con
+  `USRP_TX_GAIN=.. USRP_RX_GAIN=.. ./usrp-start.sh` (máximo TX 89.75 ~ +10 dBm).
 - El contenedor recibe todo `/dev/bus/usb` (la B2xx se re-enumera de USB 2 a USB 3 al cargar el firmware).
 - Algún `Underflow: 1` esporádico en consola es normal con el gobernador de CPU en `powersave`;
   con `performance` desaparecen casi del todo.

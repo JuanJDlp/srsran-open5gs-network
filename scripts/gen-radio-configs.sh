@@ -7,7 +7,7 @@
 # ssb_nr_arfcn: value printed by the gNB as dl_ssb_arfcn (368410 for 10, 15 and 20 MHz, verified).
 set -euo pipefail
 LOG_LEVEL="${LOG_LEVEL:-warning}"   # gNB/UE file log level (info or debug for troubleshooting)
-USRP_TX_GAIN="${USRP_TX_GAIN:-60}"  # USRP gains (dB). B210 TX 0-89.75: 60 ~ -20 dBm, enough for a nearby phone
+USRP_TX_GAIN="${USRP_TX_GAIN:-80}"  # USRP gains (dB). B200/B210 TX 0-89.75: 80 ~ 0 dBm, safe over the air for a HackRF
 USRP_RX_GAIN="${USRP_RX_GAIN:-40}"  # B210 RX 0-76
 cd "$(dirname "$0")/../configs"
 
@@ -23,8 +23,9 @@ ru_sdr:                             # "Radio Unit" por SDR: una USRP B200/B210 r
   sync: internal                    # señal PPS interna (no hay que sincronizar con otra radio)
   srate: ${1}                      # tasa de muestreo en MHz (${1} Msps alcanza para ${2} PRB = ${3} MHz)
   otw_format: sc12                  # muestras de 12 bits por el USB (menos ancho de banda que sc16, mismo resultado)
-  tx_gain: ${USRP_TX_GAIN}                      # ganancia TX en dB (B210: 0-89.75). 60 ~ -20 dBm a 1.8 GHz; subir con
-                                    # antenas y teléfono lejos, bajar si va por cable (siempre con atenuadores)
+  tx_gain: ${USRP_TX_GAIN}                      # ganancia TX en dB (B200/B210: 0-89.75). 80 ~ 0 dBm a 1.8 GHz: por aire
+                                    # llegan <= -12 dBm a una HackRF (máx -5 dBm) aun con antenas a 5 cm.
+                                    # Por cable NUNCA sin 30-60 dB de atenuadores. 89.75 = máximo (~ +10 dBm)
   rx_gain: ${USRP_RX_GAIN}                      # ganancia RX en dB (B210: 0-76); muy alta satura con el UE cerca
 EOF
 }
