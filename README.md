@@ -225,6 +225,8 @@ make usrp-logs     # últimas líneas del gNB;  docker attach gnb-usrp (t = mét
   con `performance` desaparecen casi del todo.
 - Verificado 2026-10-29 con una B200 (USB 3): NG Setup aceptado, `==== gNB started ===`, Late 0 / Overflow 0,
   ~1 underflow cada 10-15 s, gNB ~1.3 núcleos y 2.2 GiB.
+- Celular comercial contra esta celda: SIM física programada con el suscriptor del core (IMSI
+  `001010123456780`), configuración del OnePlus y logs de diagnóstico en `docs/sim-oneplus.md`.
 
 ## Decisiones y problemas resueltos
 
@@ -257,7 +259,8 @@ configs/gnb/gnb_overrides.yml  2.º archivo del gNB (MCS fijo, métricas); measu
 scripts/                 up.sh, verify.sh, split.sh (modo distribuido), capture.sh, down.sh, upf-entrypoint.sh, gen-radio-configs.sh,
                          rf/rf.sh y rf/rf_analyze.py (validación RF con HackRF),
                          measure.sh (mediciones), analysis/bler.sh y analysis/throughput.py (análisis)
-docs/                    analisis-codificacion.md (MCS, LDPC/Polar) y rendimiento.md (medidas y análisis)
+docs/                    analisis-codificacion.md (MCS, LDPC/Polar), rendimiento.md (medidas y análisis) y
+                         sim-oneplus.md (SIM física programada + celular OnePlus contra el gNB USRP)
 results/raw/             datos crudos de las mediciones; results/analysis/ CSVs, figuras y resumen.md
 results/rf/              capturas HackRF (los .iq se ignoran) con su report.md y figuras
 captures/ logs/          artefactos de ejecución (ignorados por git)
