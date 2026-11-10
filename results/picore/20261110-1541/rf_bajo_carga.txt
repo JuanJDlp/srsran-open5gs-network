@@ -1,0 +1,6 @@
+  1.00 s at 15.36 Msps, tuned 1842.5000 MHz, level -38.2 dBFS, clipped samples 0.000 %
+  PASS SSB detectado: 100 SSB en 100 ráfagas, SNR en la banda del SSB ~12.3 dB
+  PASS PCI medido 1 (N_ID1 0, N_ID2 1), configurado 1; margen SSS 7.0x
+  PASS frecuencia del SSB 1842.0524 MHz, esperada 1842.0500 MHz (ARFCN 368410); diferencia +2.4 kHz = +1.3 ppm (error de reloj HackRF+USRP)
+  PASS señal ocupa 1837.816-1847.128 MHz (9.31 MHz, max-hold), canal configurado 1837.500-1847.500 MHz
+  report: results/rf/20261110-154742/report.md

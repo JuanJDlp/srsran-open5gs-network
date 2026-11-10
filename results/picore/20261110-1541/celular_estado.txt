@@ -1,0 +1,12 @@
+# Estado del celular 2026-11-10T15:44:03-05:00
+[gsm.network.type]: [NR_SA,Unknown]
+[gsm.sim.operator.alpha]: [SISCOM2]
+[gsm.sim.operator.iso-country]: []
+[gsm.sim.operator.numeric]: [00101]
+[gsm.version.baseband]: [Q_V1_P14,Q_V1_P14]
+[ro.build.display.id]: [CPH2409_14.0.0.601(EX01)]
+[ro.product.model]: [CPH2409]
+CellIdentityNr:{ mPci = 1 mTac = 7 mNrArfcn = 368410 mBands = [3] mMcc = 001 mMnc = 01 mNci = 6733824 mAlphaLong = SISCOM2 mAlphaShort = SISCOM2 mAdditionalPlmns = {}
+CellSignalStrengthNr:{ csiRsrp = 2147483647 csiRsrq = 2147483647 csiCqiTableIndex = 2147483647 csiCqiReport = [] ssRsrp = -73 ssRsrq = -11 ssSinr = 38 level = 3 parametersUseForLevel = 0 timingAdvance = 2147483647 }
+    inet 10.99.0.2/30 scope global rmnet_data1
+            carrier_nr_availabilities_int_array = [1]

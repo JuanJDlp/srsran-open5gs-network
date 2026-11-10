@@ -1,0 +1,26 @@
+Nov 10, 2026 20:44:16.755716000 UTC	10.42.0.1	10.42.0.28	UplinkNASTransport
+Nov 10, 2026 20:44:16.757900000 UTC	10.42.0.28	10.42.0.1	SACK (Ack=0, Arwnd=106496) , PDUSessionResourceReleaseCommand
+Nov 10, 2026 20:44:16.795850000 UTC	10.42.0.1	10.42.0.28	SACK (Ack=0, Arwnd=106496) , PDUSessionResourceReleaseResponse
+Nov 10, 2026 20:44:16.919727000 UTC	10.42.0.1	10.42.0.28	DATA (TSN=1) (retransmission) , UplinkNASTransport
+Nov 10, 2026 20:44:17.035844000 UTC	10.42.0.1	10.42.0.28	UplinkNASTransport
+Nov 10, 2026 20:44:17.041965000 UTC	10.42.0.28	10.42.0.1	SACK (Ack=3, Arwnd=106496) , UEContextReleaseCommand
+Nov 10, 2026 20:44:17.194967000 UTC	10.42.0.1	10.42.0.28	SACK (Ack=1, Arwnd=106496) , UEContextReleaseComplete
+Nov 10, 2026 20:44:25.218074000 UTC	10.42.0.1	10.42.0.28	InitialUEMessage, Registration request, Registration request
+Nov 10, 2026 20:44:25.228974000 UTC	10.42.0.28	10.42.0.1	SACK (Ack=5, Arwnd=106496) , InitialContextSetupRequest
+Nov 10, 2026 20:44:25.288074000 UTC	10.42.0.1	10.42.0.28	SACK (Ack=2, Arwnd=106496) , InitialContextSetupResponse
+Nov 10, 2026 20:44:25.416618000 UTC	10.42.0.28	10.42.0.1	DownlinkNASTransport
+Nov 10, 2026 20:44:25.638002000 UTC	10.42.0.1	10.42.0.28	UplinkNASTransport
+Nov 10, 2026 20:44:25.678098000 UTC	10.42.0.1	10.42.0.28	SACK (Ack=4, Arwnd=106496) , PDUSessionResourceSetupResponse
+Nov 10, 2026 20:44:38.978038000 UTC	10.42.0.1	10.42.0.28	UplinkNASTransport
+Nov 10, 2026 20:44:38.980056000 UTC	10.42.0.28	10.42.0.1	SACK (Ack=11, Arwnd=106496) , PDUSessionResourceReleaseCommand
+Nov 10, 2026 20:44:39.018076000 UTC	10.42.0.1	10.42.0.28	SACK (Ack=5, Arwnd=106496) , PDUSessionResourceReleaseResponse
+Nov 10, 2026 20:44:39.144755000 UTC	10.42.0.1	10.42.0.28	DATA (TSN=12) (retransmission) , UplinkNASTransport
+Nov 10, 2026 20:44:39.238068000 UTC	10.42.0.1	10.42.0.28	UplinkNASTransport
+Nov 10, 2026 20:44:39.240512000 UTC	10.42.0.28	10.42.0.1	SACK (Ack=14, Arwnd=106496) , UEContextReleaseCommand
+Nov 10, 2026 20:44:39.393124000 UTC	10.42.0.1	10.42.0.28	SACK (Ack=6, Arwnd=106496) , UEContextReleaseComplete
+Nov 10, 2026 20:45:09.219493000 UTC	10.42.0.1	10.42.0.28	InitialUEMessage, Registration request, Registration request
+Nov 10, 2026 20:45:09.228264000 UTC	10.42.0.28	10.42.0.1	SACK (Ack=16, Arwnd=106496) , InitialContextSetupRequest
+Nov 10, 2026 20:45:09.289411000 UTC	10.42.0.1	10.42.0.28	SACK (Ack=7, Arwnd=106496) , InitialContextSetupResponse
+Nov 10, 2026 20:45:09.416630000 UTC	10.42.0.28	10.42.0.1	DownlinkNASTransport
+Nov 10, 2026 20:45:09.699418000 UTC	10.42.0.1	10.42.0.28	UplinkNASTransport
+Nov 10, 2026 20:45:09.739377000 UTC	10.42.0.1	10.42.0.28	SACK (Ack=9, Arwnd=106496) , PDUSessionResourceSetupResponse

@@ -172,10 +172,24 @@ Resumen de la configuración del OnePlus para esta celda:
 | Operador | Manual: `00101` / SISCOM2 |
 | Datos móviles | Activados en SIM1 |
 
-### 4.2 Si no se engancha en 5G
+### 4.2 Paso obligatorio en el CPH2409: forzar NR only
 
-- Menú de pruebas de Android: marcar `*#*#4636#*#*` → *Phone information* → *Set preferred network type*
-  → **NR only** (o *NR/LTE*). En algunos OnePlus el menú no aparece o no tiene esta opción.
+**Verificado el 2026-11-10: sin este paso el OnePlus nunca se conecta.** Con la SIM `00101` el celular
+carga el perfil de operador "genérico" de OnePlus, que fija `carrier_nr_availabilities_int_array = [1]`
+(solo NSA, sin SA). NSA necesita una celda LTE de ancla y el laboratorio es 5G SA puro, así que el celular
+se queda en "solo emergencias" sobre el 3G de un operador comercial y el gNB no recibe ni un preámbulo
+RACH. La búsqueda manual de operadores tampoco sirve: solo lista redes 4G/3G.
+
+- Marcar `*#*#4636#*#*` → *Información del teléfono* → *Tipo de red preferido* → **NR only**. En
+  segundos el gNB recibe el RACH y el AMF registra al celular (`Registration complete`, tipo de red `NR_SA`).
+  Desde el PC con `adb`: `adb shell am start -n com.android.phone/.settings.RadioInfo` abre ese menú.
+- El ajuste se pierde al reiniciar el celular: repetirlo en cada prueba.
+- Comprobarlo por `adb`: `adb shell dumpsys carrier_config | grep carrier_nr_availabilities` (el valor de
+  `mConfigFromDefaultApp` es el que manda) y `adb shell getprop gsm.network.type` (debe decir `NR_SA`).
+- Con este perfil el celular se desregistra solo unos 14 s después de algunos registros y vuelve a
+  registrarse (*SA backoff*, `carrier_sa_backoff = true`); la sesión de datos se recupera sola.
+- Cambiar el perfil de operador requiere root. No se recomienda programar la SIM con el PLMN de un
+  operador real para "heredar" su perfil: la celda emitiría la identidad de otra red.
 - Menú de ingeniería de OnePlus: `*#800#` (registros *Logkit*) y `*#899#`; varía según la versión de
   OxygenOS/ColorOS.
 - Apps de observación sin root: *NetMonster* o *Network Cell Info Lite* muestran la banda, PCI, RSRP y

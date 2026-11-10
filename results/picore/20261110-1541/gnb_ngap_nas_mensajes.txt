@@ -1,0 +1,40 @@
+ 2003.204  InitialUEMessage, Registration request
+ 2003.219  DownlinkNASTransport, Authentication request
+ 2003.503  UplinkNASTransport, Authentication response
+ 2003.509  DownlinkNASTransport, Security mode command
+ 2003.543  UplinkNASTransport
+ 2003.562  InitialContextSetupRequest
+ 2003.642  UplinkNASTransport
+ 2003.735  DownlinkNASTransport
+ 2005.043  UplinkNASTransport
+ 2005.057  PDUSessionResourceSetupRequest
+ 2244.025  UplinkNASTransport
+ 2244.028  PDUSessionResourceReleaseCommand
+ 2244.065  UplinkNASTransport
+ 2244.305  UplinkNASTransport
+ 2252.488  InitialUEMessage, Registration request, Registration request
+ 2252.499  InitialContextSetupRequest
+ 2252.587  UplinkNASTransport
+ 2252.686  DownlinkNASTransport
+ 2252.908  UplinkNASTransport
+ 2252.916  PDUSessionResourceSetupRequest
+ 2266.248  UplinkNASTransport
+ 2266.250  PDUSessionResourceReleaseCommand
+ 2266.288  UplinkNASTransport
+ 2266.508  UplinkNASTransport
+ 2296.489  InitialUEMessage, Registration request, Registration request
+ 2296.498  InitialContextSetupRequest
+ 2296.589  UplinkNASTransport
+ 2296.686  DownlinkNASTransport
+ 2296.969  UplinkNASTransport
+ 2296.976  PDUSessionResourceSetupRequest
+ 3530.234  UplinkNASTransport
+ 3530.236  PDUSessionResourceReleaseCommand
+ 3530.274  UplinkNASTransport
+ 3530.654  UplinkNASTransport
+ 3536.815  InitialUEMessage, Registration request, Registration request
+ 3536.822  InitialContextSetupRequest
+ 3536.915  UplinkNASTransport
+ 3537.007  DownlinkNASTransport
+ 3537.315  UplinkNASTransport
+ 3537.322  PDUSessionResourceSetupRequest

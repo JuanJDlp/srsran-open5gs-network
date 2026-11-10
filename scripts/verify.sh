@@ -35,11 +35,12 @@ done
 check "N4: SMF-UPF PFCP association" has_log smf 'PFCP associated \[10\.88\.1\.3\]'
 
 step "V2 - N2 (NGAP over SCTP)"
-check "gnb container running" bash -c "[[ \$(cdocker inspect -f '{{.State.Running}}' gnb) == true ]]"
+check "gnb container running" bash -c "[[ \$(gdocker inspect -f '{{.State.Running}}' gnb) == true ]]"
 # Only AMF log lines written after the current gNB started count (older runs leave stale lines).
-gnb_start=$(cdocker inspect -f '{{.State.StartedAt}}' gnb 2>/dev/null || echo "")
+gnb_start=$(gdocker inspect -f '{{.State.StartedAt}}' gnb 2>/dev/null || echo "")
 amf_since() { SINCE="$gnb_start" clog amf | grep -E "$1" >/dev/null; }
-check "AMF accepted gNB 10.88.2.20 (current run)" amf_since 'gNB-N2 accepted\[10\.88\.2\.20\]'
+n2_ip="${GNB_N2_IP:-10.88.2.20}"   # picore mode: the AMF sees the PC's IP (NAT on the cable)
+check "AMF accepted gNB $n2_ip (current run)" amf_since "gNB-N2 accepted\\[${n2_ip//./\\.}\\]"
 
 step "V3 - radio access and registration"
 check "UE: Random Access complete" has_log ue 'Random Access Complete'

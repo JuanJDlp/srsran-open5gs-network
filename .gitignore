@@ -11,3 +11,6 @@ results/rf/selftest/
 secrets/
 *.key
 __pycache__/
+configs/open5gs/upf_picore.yaml
+configs/open5gs/amf_picore.yaml
+results/picore/**/*_completo.pcap

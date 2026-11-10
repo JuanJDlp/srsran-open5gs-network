@@ -15,16 +15,6 @@ STABILITY_S="${STABILITY_S:-20}"   # seconds watched for Late/Underflow/Overflow
 du() { docker compose --profile ran --profile usrp "$@"; }
 uhd_run() { du run --rm --no-deps -T --entrypoint "$1" gnb-usrp "${@:2}" 2>&1; }
 
-# Prints "<bus>-<port> <speed Mbit/s>" of the first Ettus device found in sysfs.
-usrp_usb() {
-  local d
-  for d in /sys/bus/usb/devices/*; do
-    [[ -f "$d/idVendor" && "$(cat "$d/idVendor")" == 2500 ]] || continue
-    echo "$(basename "$d") $(cat "$d/speed")"; return 0
-  done
-  return 1
-}
-
 step "1/5 Requirements"
 docker info >/dev/null 2>&1 || die "Docker is not running (sudo systemctl start docker)"
 if ! docker image inspect "$IMG" >/dev/null 2>&1; then

@@ -1,0 +1,26 @@
+# =====================================================================================================
+# Despliegue "core en la Pi", lado PC: solo el gNB (USRP real, o ZMQ + srsUE para probar sin radio).
+# El core Open5GS corre en la Raspberry Pi, al otro lado del cable Ethernet. Se usa ENCIMA de docker-compose.yml:
+#   docker compose -f docker-compose.yml -f docker-compose.picore-pc.yml --profile usrp up -d gnb-usrp
+# (lo hace scripts/picore.sh, que calcula PI_IP y PC_IP a partir del alias SSH de la Pi).
+# El gNB sigue en 10.88.2.20 dentro de su red Docker; Docker hace NAT hacia/desde el cable.
+# =====================================================================================================
+
+x-gnb-picore: &gnb-picore
+  ports:
+    - "${PC_IP}:2152:2152/udp"      # N3 de bajada: el UPF de la Pi manda el GTP-U a PC_IP:2152 y Docker lo
+                                    # reenvía al gNB (10.88.2.20)
+
+services:
+  gnb:                              # gNB con radio ZMQ (prueba sin USRP, con el srsUE en este mismo PC)
+    <<: *gnb-picore
+    # Mismo arranque que en docker-compose.yml, más dos cambios por línea de comandos:
+    #   cu_cp amf --addr: el AMF ya no está en 10.88.2.2 local sino en la Pi (PI_IP:38412, publicado por Docker)
+    #   cu_up upf --ext_addr: IP N3 que el gNB anuncia al core para el GTP-U de bajada (la del PC en el cable)
+    command: ["-c", "/configs/gnb.yml", "-c", "/configs/gnb_overrides.yml",
+              "cu_cp", "amf", "--addr=${PI_IP}", "cu_up", "upf", "--ext_addr=${PC_IP}"]
+
+  gnb-usrp:                         # gNB con la USRP B200/B210 real (el modo objetivo)
+    <<: *gnb-picore
+    command: ["-c", "/configs/gnb.yml", "-c", "/configs/gnb_overrides.yml",
+              "cu_cp", "amf", "--addr=${PI_IP}", "cu_up", "upf", "--ext_addr=${PC_IP}"]

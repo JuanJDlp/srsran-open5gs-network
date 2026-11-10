@@ -1,0 +1,2 @@
+DL (18 s con carga): CQI 15.0, MCS 28.0, brate medio 27.5 Mbit/s (max 29.0), BLER 0.02 % (3/17031)
+UL (11 s con carga): SNR PUSCH 27.7 dB, MCS 27.4, brate medio 30.2 Mbit/s (max 34.0), BLER 5.57 % (598/10736)

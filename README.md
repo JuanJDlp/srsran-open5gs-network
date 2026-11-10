@@ -228,6 +228,59 @@ make usrp-logs     # últimas líneas del gNB;  docker attach gnb-usrp (t = mét
 - Celular comercial contra esta celda: SIM física programada con el suscriptor del core (IMSI
   `001010123456780`), configuración del OnePlus y logs de diagnóstico en `docs/sim-oneplus.md`.
 
+## Arquitectura completa: core en la Raspberry Pi, gNB con USRP en el PC, celular comercial
+
+El despliegue final: el core Open5GS corre en la Raspberry Pi 5 y el gNB (srsRAN 24.10.1 + USRP B200) en el
+PC. Un celular 5G comercial con la SIM programada (`docs/sim-oneplus.md`) se registra en la celda y navega.
+Por el cable solo pasan **N2** (NGAP sobre SCTP) y **N3** (GTP-U), así que los 100 Mbit/s del adaptador sobran.
+
+```
+ celular 5G SA  ~~ n3 1842.5/1747.5 MHz ~~  USRP B200 ── USB 3 ── PC (10.42.0.1)          cable          Raspberry Pi 5 (10.42.0.28)
+ (OnePlus, SIM 00101)                                            gnb-usrp 10.88.2.20 ── N2 38412/sctp ──▶ AMF ─┐
+                                                                                     ◀─ N3 2152/udp  ──▶ UPF ─┴─ core Open5GS (13) ──▶ Internet
+```
+
+```bash
+make usrp-build      # imagen del gNB con UHD en el PC (~10 min la 1.ª vez); la Pi usa las imágenes de make split-build
+make picore-up       # core en la Pi -> USRP (exige USB 3) -> gNB -> NG Setup por el cable -> 20 s de estabilidad
+make picore-verify   # core (13), PFCP, N3 anunciado, NG Setup desde el PC, celda arriba y nº de UEs registrados
+make picore-logs     # últimas líneas de amf/smf/upf (Pi) y del gNB (PC)
+make picore-down     # apaga el gNB (deja de transmitir) y el core de la Pi (conserva la base de suscriptores)
+RADIO=zmq make picore-up   # misma separación sin USRP: gNB ZMQ + srsUE en el PC (necesita make build; aún sin probar)
+```
+
+Cómo cruzan N2 y N3 el cable (`docker-compose.picore-{pi,pc}.yml`, `scripts/picore.sh`):
+
+- La Pi publica `38412/sctp` (AMF) y `2152/udp` (UPF) en su IP del cable; el PC publica `2152/udp` del gNB.
+- El gNB recibe por línea de comandos `cu_cp amf --addr=<IP Pi>` y `cu_up upf --ext_addr=<IP PC>` (la IP
+  que anuncia al core para el GTP-U de bajada). El UPF anuncia la IP de la Pi (`advertise`).
+- Docker 27 reenvía un puerto publicado a la IP del contenedor en su **primera** red (`cn`), no en `ran`.
+  Por eso, solo en este modo, el AMF escucha NGAP también en `10.88.1.2` y el UPF atiende N3 en
+  `10.88.1.3` (`amf_picore.yaml`/`upf_picore.yaml`, generados por el script y fuera de git), y el UPF
+  saca el GTP-U de bajada por `cn` (ruta dentro del contenedor). Sin esto, N2 da `Connection refused`.
+
+Celular: además de la configuración de `docs/sim-oneplus.md`, en el OnePlus hay que forzar **NR only**
+(`*#*#4636#*#*` → *Información del teléfono* → *Tipo de red preferido*). Su perfil de operador para SIM
+desconocidas fija `carrier_nr_availabilities_int_array = [1]` (solo NSA): sin forzarlo nunca intenta SA
+y el gNB no recibe ni un RACH.
+
+Resultados (2026-11-10, OnePlus Nord CE 2 Lite 5G CPH2409, 10 MHz, TX 89.75 dB, celular a ~1 m, Wi-Fi del
+celular apagado). Evidencias en `results/picore/20261110-1541/`:
+
+| Prueba | Resultado |
+|---|---|
+| Registro 5G SA | `Registration request` → `Registration complete` en ~200 ms; IP `10.99.0.x`; tipo de red `NR_SA` |
+| Señal en el celular | SS-RSRP −73 dBm, SS-RSRQ −11 dB, SS-SINR 38 dB (PCI 1, ARFCN 368410, n3) |
+| Métricas MAC del gNB, DL | CQI 15, MCS 28 (64QAM), 27.5 Mbit/s de media (29 máx.), BLER 0.02 % |
+| Métricas MAC del gNB, UL | MCS 27-28, 30.2 Mbit/s de media (34 máx.), SNR PUSCH ~28-38 dB, BLER 0-4 % (5.6 % con 2 s de desvanecimiento) |
+| Descarga / subida HTTPS desde el celular | ~25 / ~24 Mbit/s (Wi-Fi del PC como referencia: 76-82 Mbit/s) |
+| ping celular → DN, 100 paquetes | 0 % de pérdida, RTT 12 / 31 / 45 ms (mín / medio / máx) |
+| ping celular → 8.8.8.8, 100 paquetes | 0 % de pérdida, RTT medio 57 ms |
+| ping PC ↔ Pi por el cable | 0.75 ms |
+| N2/N3 en el cable (`cable_n2_n3.pcap`) | NGAP (InitialUEMessage, InitialContextSetup, PDUSessionResourceSetup) y 105 MB de GTP-U |
+| HackRF bajo carga | SSB 100/100, PCI 1, +1.3 ppm, canal ocupado 9.3 de 10 MHz |
+| USRP / recursos | Late 0, Underflow ocasional (gobernador `powersave`); gNB ~0.9 núcleos y 2.2 GiB; Pi 58.7 °C, carga 0.3 |
+
 ## Decisiones y problemas resueltos
 
 | Problema | Causa | Solución |
@@ -243,6 +296,9 @@ make usrp-logs     # últimas líneas del gNB;  docker attach gnb-usrp (t = mét
 | En la Pi, `gradiant/open5gs` no arranca | La imagen solo se publica para amd64 | `images/open5gs` y `images/open5gs-webui` compilan v2.7.7 en ARM64 |
 | gNB en ARM64: `unknown value 'native+crypto' for '-march'` | En aarch64 el CMake de srsRAN añade `+crypto` a `MARCH` | `MARCH=armv8.2-a+dotprod+fp16` en `scripts/split.sh` |
 | `split-verify`: `kex_exchange_identification: Connection reset by peer` | `docker compose ps` remoto abre una sesión SSH por contenedor y supera `MaxStartups` de la Pi | Contar contenedores con un solo `docker ps` en `verify.sh` |
+| N2 con `Connection refused` con el core en la Pi | Docker 27 reenvía el puerto publicado a la IP del contenedor en su primera red (`cn`) y el AMF/UPF escuchaban solo en `ran` | Modo `picore`: NGAP también en `10.88.1.2`, GTP-U en `10.88.1.3` con `advertise` = IP de la Pi |
+| El OnePlus no ve la celda (ni un RACH en el gNB) | Su perfil de operador para SIM desconocidas solo permite NSA (`carrier_nr_availabilities_int_array = [1]`) | Forzar *NR only* en `*#*#4636#*#*`; sin root no se puede cambiar el perfil |
+| La HackRF casi no veía la celda | Antena de la HackRF horizontal y las de la USRP verticales (pérdida por polarización) | Antenas paralelas: el SNR del SSB pasa de ~0 a 8-15 dB |
 | 5G-AKA fallaba con HTTP 500 | Campos numéricos del suscriptor guardados como `double` | `NumberInt`/`NumberLong` en `configs/open5gs/mongo-init.js` |
 
 ## Estructura
@@ -250,13 +306,14 @@ make usrp-logs     # últimas líneas del gNB;  docker attach gnb-usrp (t = mét
 ```
 docker-compose.yml       servicios, redes y volúmenes (gnb/ue en el perfil "ran", tools en "capture")
 docker-compose.split-*.yml, split-pi.env   modo distribuido (core+gNB en la Pi, UE en el PC)
+docker-compose.picore-*.yml, picore-pi.env  core en la Pi, gNB (USRP) en el PC
 .env                     versiones, ancho de banda y reparto de CPU
 images/                  Dockerfiles: gnb, srsue, dn (iperf3), tools (tcpdump/tshark), phy-sim (BLER/Polar),
                          open5gs y open5gs-webui (ARM64, para la Pi)
 configs/open5gs/         YAML de cada NF + mongo-init.js (suscriptor)
 configs/gnb, configs/ue  generados con scripts/gen-radio-configs.sh (no editar a mano)
 configs/gnb/gnb_overrides.yml  2.º archivo del gNB (MCS fijo, métricas); measure.sh pone el suyo
-scripts/                 up.sh, verify.sh, split.sh (modo distribuido), capture.sh, down.sh, upf-entrypoint.sh, gen-radio-configs.sh,
+scripts/                 up.sh, verify.sh, split.sh (modo distribuido), picore.sh (core en la Pi + gNB USRP), capture.sh, down.sh, upf-entrypoint.sh, gen-radio-configs.sh,
                          rf/rf.sh y rf/rf_analyze.py (validación RF con HackRF),
                          measure.sh (mediciones), analysis/bler.sh y analysis/throughput.py (análisis)
 docs/                    analisis-codificacion.md (MCS, LDPC/Polar), rendimiento.md (medidas y análisis) y

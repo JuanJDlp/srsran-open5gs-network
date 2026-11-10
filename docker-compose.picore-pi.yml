@@ -1,0 +1,28 @@
+# =====================================================================================================
+# Despliegue "core en la Pi", lado Raspberry Pi 5: SOLO el core Open5GS (+ Mongo, WebUI y dn).
+# El gNB (USRP B200 o, para pruebas, ZMQ + srsUE) corre en el PC. Se usa ENCIMA de docker-compose.yml:
+#   docker compose -f docker-compose.yml -f docker-compose.picore-pi.yml up -d   (lo hace scripts/picore.sh)
+# Por el cable Ethernet solo pasan N2 (NGAP/SCTP) y N3 (GTP-U/UDP): poco tráfico, el cable de 100 Mbit/s sobra.
+# PI_IP y PC_IP (IP de cada equipo en el cable) los calcula scripts/picore.sh; imágenes y CPU en picore-pi.env.
+# =====================================================================================================
+
+services:
+  webui:
+    ports:
+      - "${PI_IP}:3000:9999"          # además de 127.0.0.1: WebUI visible desde el PC en http://<PI_IP>:3000
+
+  amf:
+    ports:
+      - "${PI_IP}:38412:38412/sctp"   # N2: el gNB del PC abre la asociación SCTP contra la IP de la Pi;
+                                      # Docker la reenvía (DNAT) a la IP del AMF en su PRIMERA red (cn, 10.88.1.2)
+    volumes: [ "./configs/open5gs/amf_picore.yaml:/config/amf.yaml:ro" ]   # amf.yaml + NGAP también en
+                                      # 10.88.1.2 (la genera scripts/picore.sh; no está en git)
+
+  upf:
+    ports:
+      - "${PI_IP}:2152:2152/udp"      # N3: el GTP-U de subida que manda el gNB del PC llega aquí y Docker lo
+                                      # reenvía al UPF en su primera red (cn, 10.88.1.3)
+    volumes:
+      - ./configs/open5gs/upf_picore.yaml:/config/upf.yaml:ro   # upf.yaml con N3 en 10.88.1.3 anunciando PI_IP
+                                      # al gNB (la genera scripts/picore.sh; no está en git)
+      - ./scripts/upf-entrypoint.sh:/scripts/upf-entrypoint.sh:ro   # mismo entrypoint (se repite: Compose reemplaza la lista)

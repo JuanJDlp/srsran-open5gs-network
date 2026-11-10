@@ -1,0 +1,15 @@
+upf CPU 0.02% MEM 0B / 0B
+amf CPU 0.00% MEM 0B / 0B
+webui CPU 0.00% MEM 0B / 0B
+pcf CPU 0.00% MEM 0B / 0B
+udr CPU 0.00% MEM 0B / 0B
+smf CPU 0.00% MEM 0B / 0B
+udm CPU 0.00% MEM 0B / 0B
+bsf CPU 0.00% MEM 0B / 0B
+ausf CPU 0.00% MEM 0B / 0B
+mongo CPU 62.99% MEM 0B / 0B
+nssf CPU 0.00% MEM 0B / 0B
+dn CPU 0.00% MEM 0B / 0B
+nrf CPU 0.02% MEM 0B / 0B
+temp=58.7'C
+ 15:47:58 up  1:14,  2 users,  load average: 0.26, 0.31, 0.30

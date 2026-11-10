@@ -11,13 +11,15 @@
 #   make rf-check RF validation of a real gNB (USRP) with a receive-only HackRF: SSB, PCI, period
 #                 (rf-info, rf-params, rf-sweep, rf-capture, rf-analyze, rf-selftest; GNB_CFG=<gnb.yml>)
 #   make usrp-build|usrp-probe|usrp-up|usrp-logs|usrp-down   core + gNB on a real USRP B200/B210 (no UE)
+#   make picore-core|picore-up|picore-verify|picore-logs|picore-down   core on the Pi, gNB (USRP) here
+#                 (RADIO=zmq: same split tested with the ZMQ gNB + srsUE on this PC, no USRP needed)
 SHELL := /bin/bash
 .PHONY: help build up verify down clean logs ps attach-gnb attach-ue configs capture bler measure analysis split-build split-up split-verify split-down split-logs \
 	rf-info rf-params rf-sweep rf-capture rf-analyze rf-check rf-selftest \
-	usrp-build usrp-probe usrp-up usrp-logs usrp-down
+	usrp-build usrp-probe usrp-up usrp-logs usrp-down picore-core picore-up picore-verify picore-logs picore-down
 
 help:
-	@sed -n "2,14p" Makefile
+	@sed -n "2,15p" Makefile
 
 build:
 	docker compose --profile ran --profile capture build
@@ -100,3 +102,6 @@ usrp-logs:
 
 usrp-down:
 	./usrp-stop.sh
+
+picore-core picore-up picore-verify picore-logs picore-down:
+	scripts/picore.sh $(@:picore-%=%)

@@ -1,0 +1,1 @@
+gnb-usrp CPU 87.44% MEM 2.201GiB / 14.97GiB

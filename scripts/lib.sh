@@ -27,10 +27,15 @@ dc() { docker compose --profile ran "$@"; }
 # so they are reached on the remote engine; the UE always runs on this machine.
 cdocker() { if [[ -n "${CORE_HOST:-}" ]]; then DOCKER_HOST="ssh://$CORE_HOST" docker "$@"; else docker "$@"; fi; }
 export -f cdocker   # verify.sh runs some checks in "bash -c" subshells
+# Docker for the gNB: with the core on the Pi and the gNB here (scripts/picore.sh) GNB_LOCAL=1.
+gdocker() { if [[ -n "${GNB_LOCAL:-}" ]]; then docker "$@"; else cdocker "$@"; fi; }
+export -f gdocker
 
 # Container logs without ANSI colors. Set SINCE=<timestamp> to only read newer lines.
 clog() {
-  local d=cdocker; [[ "$1" == ue ]] && d=docker
+  local d=cdocker
+  [[ "$1" == ue ]] && d=docker
+  [[ "$1" == gnb* ]] && d=gdocker
   $d logs ${SINCE:+--since "$SINCE"} "$1" 2>&1 | sed -r 's/\x1B\[[0-9;?]*[a-zA-Z]//g; s/\r//g'
 }
 
@@ -52,6 +57,16 @@ wait_log() {
   for ((i = 0; i < t; i++)); do
     if clog "$c" | grep -E "$re" >/dev/null; then return 0; fi
     sleep 1
+  done
+  return 1
+}
+
+# Prints "<bus>-<port> <speed Mbit/s>" of the first Ettus (USRP) device found in sysfs.
+usrp_usb() {
+  local d
+  for d in /sys/bus/usb/devices/*; do
+    [[ -f "$d/idVendor" && "$(cat "$d/idVendor")" == 2500 ]] || continue
+    echo "$(basename "$d") $(cat "$d/speed")"; return 0
   done
   return 1
 }

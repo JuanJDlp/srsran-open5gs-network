@@ -1,0 +1,10 @@
+# Referencia: PC por Wi-Fi
+DL 9502881 B/s 2.630781s
+DL 10224028 B/s 2.445220s
+# Celular por la red 5G (DL)
+DL 3003627 B/s 8.323270s
+DL 3211342 B/s 7.784907s
+DL 3200779 B/s 7.810598s
+# Celular por la red 5G (UL)
+UL 2999069 B/s 3.334367s
+UL 2916391 B/s 3.428895s
