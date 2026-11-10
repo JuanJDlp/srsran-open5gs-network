@@ -78,6 +78,7 @@ search period (`50`), SMSP y las constantes Milenage (*R&C Para*).
 Muchos modelos tienen n3 solo para NSA, o SA solo en n78/n41. Si no lo soporta, el celular **no verá la
 celda** aunque la SIM esté perfecta. Hay que comprobarlo en la ficha técnica del modelo y región
 (p. ej. en *Ajustes → Acerca del dispositivo*, el modelo exacto, y buscar sus bandas NR SA).
+El OnePlus del laboratorio (Nord CE 2 Lite 5G **CPH2409**) sí lista n3 en SA: ver §4.0.
 
 Otros riesgos conocidos, de más a menos probable:
 
@@ -101,21 +102,75 @@ celular encuentra el SSB (PCI 1) → lee SIB1 (PLMN 00101, TAC 7) → RACH → R
 
 ## 4. Configuración del OnePlus
 
+### 4.0 Equipo usado en el laboratorio
+
+| Dato | Valor |
+|---|---|
+| Modelo | **OnePlus Nord CE 2 Lite 5G**, número de modelo **CPH2409** (variante global/Europa) |
+| Procesador / módem | Qualcomm Snapdragon 695 5G, octa-core (módem X51 integrado) |
+| Sistema | Android 14, OxygenOS 14.0 |
+| Ranura usada | SIM1 (nombre mostrado: `SIM1`) |
+| Bandas 5G NR (CPH2409) | SA y NSA: n1, n3, n5, n7, n8, n20, n28, n38, n40, n41, n66, n77, n78 |
+| ¿Soporta la celda del lab? | **Sí, n3 en SA** según fichas técnicas del CPH2409 (no confirmado por el fabricante) |
+
+> La variante de India (**CPH2381**) solo lista n1, n28, n41, n77 y n78: **sin n3**, así que no vería
+> esta celda. Antes de usar otro Nord CE 2 Lite, revisar el número de modelo en *Ajustes → Acerca del
+> dispositivo*.
+
+Fuentes de las bandas (fichas de terceros):
+[GSMArena](https://www.gsmarena.com/oneplus_nord_ce_2_lite_5g-11344.php),
+[imei.org](https://imei.org/phone-model-lookup/oneplus-nord-ce-2-lite-5g_11673),
+[myworldphone (CPH2409)](https://myworldphone.com/en-ca/products/op-ce2-lt-5g-cph2409-8-128-bk),
+[Kimovil](https://www.kimovil.com/en/frequency-checker/IN/oneplus-nord-ce-2-lite-5g).
+
+**Estado observado con la SIM insertada (antes de registrarse en la celda):**
+
+- El celular lee la SIM: en *Operadores de redes* aparece **"No hay servicios – SISCOM2"**. `SISCOM2`
+  es el SPN grabado en la SIM, así que la tarjeta se lee bien; "no hay servicios" solo significa que
+  todavía no encontró la celda (gNB apagado, lejos o sin seleccionar la red).
+- *Número de SIM*: "no definido". Es lo esperado: la SIM no tiene MSISDN y la red no lo usa.
+
 ### 4.1 Básica
 
 1. Con el celular apagado, insertar la SIM (si es dual SIM, en la ranura 1 y sin otra SIM de datos).
 2. *Ajustes → Red móvil → SIM → Tipo de red preferida*: **5G/4G/3G/2G (automático)**.
-3. *Ajustes → Red móvil → SIM → Nombres de puntos de acceso (APN)* → **Añadir**:
-   - Nombre: `SISCOM2`
-   - APN: `internet`
-   - MCC `001`, MNC `01`
-   - Tipo de APN: `default,supl`
-   - Protocolo APN y de roaming: `IPv4`
-   - Guardarlo y seleccionarlo.
+3. *Ajustes → Red móvil → SIM → Nombres de puntos de acceso (APN)* → **Nueva APN**. Campos tal como
+   aparecen en OxygenOS 14:
+
+   | Campo | Valor | Nota |
+   |---|---|---|
+   | Nombre | `SISCOM2` | Libre, solo para identificarla |
+   | APN | `internet` | Debe ser igual al DNN de `smf.yaml` y del suscriptor (minúsculas) |
+   | Proxy / Puerto | vacío | |
+   | Nombre de usuario / Contraseña / Servidor | vacío | El core no autentica la APN |
+   | MMSC / Proxy MMS / Puerto MMS | vacío | No hay MMS en el lab |
+   | MCC / MNC | `001` / `01` | PLMN de la SIM y del AMF |
+   | Tipo de autenticación | Ninguno | |
+   | Tipo de APN | `default,supl` | Texto libre, con coma y **sin espacios**. Basta con `default`; no poner `ims` ni `mms` |
+   | Protocolo APN | `IPv4` | El pool del SMF es solo IPv4 (`10.99.0.0/16`) |
+   | Protocolo de roaming APN | `IPv4` | |
+   | Tipo de conexión (bearer) | **No especificado** | Elegir `LTE` u otro la limitaría a esa tecnología |
+   | Tipo MVNO | Ninguno | |
+
+   Guardarla (menú ⋮ → *Guardar*) y **seleccionarla** en la lista.
 4. *Ajustes → Red móvil → SIM → Operador de red*: desactivar selección automática, esperar la búsqueda y
    elegir **00101** / **SISCOM2** (puede aparecer como `001 01`).
-5. Activar **datos móviles** (y *roaming de datos*, por si el firmware trata el PLMN de pruebas como roaming).
-6. Si no aparece nada: modo avión 10 s y fuera, o reiniciar el celular.
+5. Activar **datos móviles** con SIM1 como SIM de datos, e **itinerancia de datos** (venía desactivada; el
+   firmware puede tratar el PLMN de pruebas como roaming y no abrir la sesión de datos).
+6. **Llamadas VoLTE: desactivar** (venían activadas). El lab no tiene IMS; con VoLTE el celular reintenta
+   registrarse en IMS y llena los logs. No impide los datos. **VoWiFi** se deja desactivado.
+7. Si no aparece nada: modo avión 10 s y fuera, o reiniciar el celular.
+
+Resumen de la configuración del OnePlus para esta celda:
+
+| Ajuste | Valor |
+|---|---|
+| Tipo de red preferida | 5G/4G/3G/2G (Auto) (no elegir las opciones sin 5G) |
+| APN | `SISCOM2` / `internet`, IPv4, `default,supl`, sin autenticación |
+| Itinerancia de datos | Activada |
+| VoLTE / VoWiFi | Desactivados |
+| Operador | Manual: `00101` / SISCOM2 |
+| Datos móviles | Activados en SIM1 |
 
 ### 4.2 Si no se engancha en 5G
 
