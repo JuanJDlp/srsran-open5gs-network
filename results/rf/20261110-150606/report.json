@@ -1,0 +1,48 @@
+{
+  "capture": "capture.iq",
+  "fc_hz": 1842500000.0,
+  "fs_hz": 15360000.0,
+  "level_dbfs": -35.303349931520145,
+  "clipped": 0.0,
+  "config": {
+    "dl_arfcn": 368500,
+    "band": 3,
+    "bw_mhz": 10.0,
+    "scs_khz": 15,
+    "pci": 1,
+    "ssb_period_ms": null,
+    "source": "configs/gnb/gnb_usrp_10mhz.yml",
+    "ssb_arfcn": 368410,
+    "ssb_scs_khz": 15,
+    "fc_hz": 1842500000.0,
+    "ssb_hz": 1842050000.0,
+    "fs_hz": 15360000.0
+  },
+  "occupied_avg_hz": [
+    1838000000.0,
+    1848200000.0
+  ],
+  "occupied_maxhold_hz": [
+    1836800000.0,
+    1846403750.0
+  ],
+  "ssb": null,
+  "checks": [
+    [
+      "PASS",
+      "saturaci\u00f3n: 0.000 % de muestras recortadas"
+    ],
+    [
+      "FAIL",
+      "no se encontr\u00f3 ning\u00fan SSB (mejor correlaci\u00f3n PSS 0.047, umbral 0.2). \u00bfEl gNB transmite? \u00bfFrecuencia o ganancia correctas?"
+    ],
+    [
+      "PASS",
+      "se\u00f1al ocupa 1836.800-1846.404 MHz (9.60 MHz, max-hold), canal configurado 1837.500-1847.500 MHz"
+    ],
+    [
+      "INFO",
+      "sin tr\u00e1fico el gNB solo emite SSB/control; para ver los 10 MHz llenos, capturar mientras el UE descarga (iperf3 -R)"
+    ]
+  ]
+}

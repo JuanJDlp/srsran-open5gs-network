@@ -1,0 +1,2 @@
+{"fc_hz": 1842500000, "fs_hz": 15360000, "dur_s": 1, "lna": 16, "vga": 20, "amp": 0,
+ "gnb_config": "configs/gnb/gnb_usrp_10mhz.yml", "date": "2026-11-10T20:14:43Z"}

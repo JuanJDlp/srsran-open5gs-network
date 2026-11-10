@@ -1,0 +1,71 @@
+{
+  "capture": "capture.iq",
+  "fc_hz": 1842500000.0,
+  "fs_hz": 15360000.0,
+  "level_dbfs": -40.565961201095575,
+  "clipped": 0.0,
+  "config": {
+    "dl_arfcn": 368500,
+    "band": 3,
+    "bw_mhz": 10.0,
+    "scs_khz": 15,
+    "pci": 1,
+    "ssb_period_ms": null,
+    "source": "configs/gnb/gnb_usrp_10mhz.yml",
+    "ssb_arfcn": 368410,
+    "ssb_scs_khz": 15,
+    "fc_hz": 1842500000.0,
+    "ssb_hz": 1842050000.0,
+    "fs_hz": 15360000.0
+  },
+  "occupied_avg_hz": null,
+  "occupied_maxhold_hz": [
+    1837996250.0,
+    1843842500.0
+  ],
+  "ssb": {
+    "n_ssb": 100,
+    "n_bursts": 100,
+    "ssb_per_burst": 1,
+    "period_ms": 10.0,
+    "nid1": 0,
+    "pci": 1,
+    "sss_margin": 6.909492653910424,
+    "pss_snr_db": 9.691047688060912,
+    "ssb_level_dbfs": -33.48606574090201,
+    "nid2": 1,
+    "raster_hz": 1842050000.0,
+    "offset_hz": 2687.5000000000073,
+    "metric": 0.9030380620708897
+  },
+  "checks": [
+    [
+      "PASS",
+      "saturaci\u00f3n: 0.000 % de muestras recortadas"
+    ],
+    [
+      "PASS",
+      "SSB detectado: 100 SSB en 100 r\u00e1fagas, SNR en la banda del SSB ~9.7 dB"
+    ],
+    [
+      "PASS",
+      "PCI medido 1 (N_ID1 0, N_ID2 1), configurado 1; margen SSS 6.9x"
+    ],
+    [
+      "PASS",
+      "frecuencia del SSB 1842.0527 MHz, esperada 1842.0500 MHz (ARFCN 368410); diferencia +2.7 kHz = +1.5 ppm (error de reloj HackRF+USRP)"
+    ],
+    [
+      "INFO",
+      "periodo de r\u00e1faga SSB 10.0 ms (1 SSB por r\u00e1faga)"
+    ],
+    [
+      "PASS",
+      "se\u00f1al ocupa 1837.996-1843.842 MHz (5.85 MHz, max-hold), canal configurado 1837.500-1847.500 MHz"
+    ],
+    [
+      "INFO",
+      "sin tr\u00e1fico el gNB solo emite SSB/control; para ver los 10 MHz llenos, capturar mientras el UE descarga (iperf3 -R)"
+    ]
+  ]
+}

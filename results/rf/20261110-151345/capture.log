@@ -1,0 +1,16 @@
+call hackrf_set_sample_rate(15360000 Hz/15.360 MHz)
+call hackrf_set_hw_sync_mode(0)
+call hackrf_set_freq(1842500000 Hz/1842.500 MHz)
+call hackrf_set_amp_enable(0)
+samples_to_xfer 15360000/15Mio
+Stop with Ctrl-C
+30.7 MiB / 1.000 sec = 30.7 MiB/second, average power -37.2 dBfs
+ 0.3 MiB / 0.007 sec = 36.8 MiB/second, average power -37.5 dBfs
+
+Exiting...
+Total time: 1.00717 s
+hackrf_stop_rx() done
+hackrf_close() done
+hackrf_exit() done
+fclose() done
+exit
